@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Low Bridge Reminder</title>
+<style>
+  :root { --bg: #0f1720; }
+  html, body { margin: 0; height: 100%; background: var(--bg); }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas { width: min(100vw, 100vh); height: min(100vw, 100vh); display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1080"></canvas>
+<script>
+// Low bridge safety reminder: a high-roof van hits a low bridge and comes out
+// as a convertible. Everything is drawn from the time t (seconds), so
+// render.js can step through it frame by frame to make the MP4.
+(() => {
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const U = 720;                 // design units; the canvas is scaled to fit
+  const DURATION = 15;
+  const FONT = '"Liberation Sans", "DejaVu Sans", Arial, sans-serif';
+
+  // Scene layout
+  const ROAD_Y = 540;            // top of the road surface
+  const DECK_L = 176, DECK_R = 316;
+  const CLEAR = 160;             // bridge clearance (3.2 m at 50 units per metre)
+  const CUT_Y = -CLEAR;          // cut line in van coordinates (y up is negative)
+  const L = 320;                 // van length
+  const ROOF = -195;             // van roof height
+  const CONTACT = L - 32;        // where the windscreen crosses the cut line
+
+  // Timeline
+  const T1 = 2.0;                            // impact
+  const V0 = 144;                            // approach speed
+  const START = DECK_L - CONTACT - V0 * T1;  // van rear x at t = 0
+  const VG = 130;                            // speed while scraping through
+  const T2 = T1 + (CONTACT) / VG;            // roof fully off (rear clears the face)
+  const STOP = 360;                          // where the rear stops
+  const DECEL = (VG * VG) / (2 * (STOP - DECK_L));
+  const T3 = T2 + VG / DECEL;                // van stopped
+  const T_MSG1 = T3 + 0.35, T_MSG2 = T3 + 1.9, T_CARD = T3 + 3.5;
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const ease = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+  const back = (x) => { x = clamp(x, 0, 1); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+  function vanX(t) {
+    if (t < T1) return START + V0 * t;
+    if (t < T2) return DECK_L - CONTACT + VG * (t - T1);
+    if (t < T3) { const d = t - T2; return DECK_L + VG * d - 0.5 * DECEL * d * d; }
+    return STOP;
+  }
+
+  // ---------- background ----------
+  function sky() {
+    const g = ctx.createLinearGradient(0, 0, 0, ROAD_Y);
+    g.addColorStop(0, '#5fb3f0'); g.addColorStop(1, '#cfeafc');
+    ctx.fillStyle = g; ctx.fillRect(-40, -40, U + 80, ROAD_Y + 40);
+  }
+  function cloud(x, y, s) {
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath();
+    ctx.arc(x, y, 26 * s, 0, 7); ctx.arc(x + 30 * s, y - 14 * s, 32 * s, 0, 7);
+    ctx.arc(x + 64 * s, y, 24 * s, 0, 7); ctx.rect(x, y - 4 * s, 64 * s, 28 * s);
+    ctx.fill();
+  }
+  function hills() {
+    ctx.fillStyle = '#9fd18b';
+    ctx.beginPath(); ctx.moveTo(-40, ROAD_Y);
+    for (let x = -40; x <= U + 40; x += 20) ctx.lineTo(x, ROAD_Y - 70 - 26 * Math.sin(x / 90) - 14 * Math.sin(x / 37));
+    ctx.lineTo(U + 40, ROAD_Y); ctx.fill();
+    ctx.fillStyle = '#7cbf6a';
+    ctx.beginPath(); ctx.moveTo(-40, ROAD_Y);
+    for (let x = -40; x <= U + 40; x += 20) ctx.lineTo(x, ROAD_Y - 34 - 16 * Math.sin(x / 60 + 2));
+    ctx.lineTo(U + 40, ROAD_Y); ctx.fill();
+  }
+  function road() {
+    ctx.fillStyle = '#4a4f57'; ctx.fillRect(-40, ROAD_Y, U + 80, 80);
+    ctx.fillStyle = '#f4f4f4';
+    for (let x = -20; x < U + 40; x += 70) ctx.fillRect(x, ROAD_Y + 38, 38, 5);
+    ctx.fillStyle = '#9aa0a8'; ctx.fillRect(-40, ROAD_Y + 80, U + 80, 8);
+    ctx.fillStyle = '#2c3440'; ctx.fillRect(-40, ROAD_Y + 88, U + 80, 200);
+  }
+  function brick(x, y, w, h, base) {
+    ctx.fillStyle = base; ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1.5;
+    for (let r = 0, yy = y; yy < y + h; yy += 14, r++) {
+      ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x + w, yy); ctx.stroke();
+      for (let xx = x + (r % 2 ? 14 : 0); xx < x + w; xx += 28) { ctx.beginPath(); ctx.moveTo(xx, yy); ctx.lineTo(xx, Math.min(yy + 14, y + h)); ctx.stroke(); }
+    }
+  }
+  const DECK_B = ROAD_Y - CLEAR, DECK_T = DECK_B - 66;
+  function bridgeBack() {
+    // embankments and the far abutment, seen through the underpass
+    ctx.fillStyle = '#6aa85a';
+    ctx.beginPath(); ctx.moveTo(DECK_L - 150, ROAD_Y); ctx.lineTo(DECK_L - 10, DECK_T + 6); ctx.lineTo(DECK_L, DECK_T + 6); ctx.lineTo(DECK_L, ROAD_Y); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(DECK_R + 150, ROAD_Y); ctx.lineTo(DECK_R + 10, DECK_T + 6); ctx.lineTo(DECK_R, DECK_T + 6); ctx.lineTo(DECK_R, ROAD_Y); ctx.fill();
+    brick(DECK_L, DECK_B, 34, CLEAR, '#a4533c');
+    brick(DECK_R - 34, DECK_B, 34, CLEAR, '#a4533c');
+    ctx.fillStyle = '#3d2a25'; ctx.fillRect(DECK_L + 34, DECK_B, DECK_R - DECK_L - 68, CLEAR);
+    const g = ctx.createLinearGradient(DECK_L, 0, DECK_R, 0);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.5, 'rgba(0,0,0,0.35)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(DECK_L + 34, DECK_B, DECK_R - DECK_L - 68, CLEAR);
+  }
+  function bridgeFront() {
+    // railings and track on top
+    ctx.fillStyle = '#394552';
+    ctx.fillRect(DECK_L - 6, DECK_T - 22, DECK_R - DECK_L + 12, 6);
+    for (let x = DECK_L - 4; x <= DECK_R + 2; x += 12) ctx.fillRect(x, DECK_T - 22, 3, 22);
+    // deck girder
+    ctx.fillStyle = '#56616e'; ctx.fillRect(DECK_L, DECK_T, DECK_R - DECK_L, DECK_B - DECK_T);
+    ctx.fillStyle = '#6c7887'; ctx.fillRect(DECK_L, DECK_T, DECK_R - DECK_L, 10);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    for (let x = DECK_L + 16; x < DECK_R; x += 34) ctx.fillRect(x, DECK_T + 10, 3, DECK_B - DECK_T - 10);
+    // hazard stripes along the bottom edge
+    ctx.save(); ctx.beginPath(); ctx.rect(DECK_L, DECK_B - 16, DECK_R - DECK_L, 16); ctx.clip();
+    ctx.fillStyle = '#ffd400'; ctx.fillRect(DECK_L, DECK_B - 16, DECK_R - DECK_L, 16);
+    ctx.fillStyle = '#111';
+    for (let x = DECK_L - 60; x < DECK_R + 60; x += 22) { ctx.beginPath(); ctx.moveTo(x, DECK_B); ctx.lineTo(x + 11, DECK_B); ctx.lineTo(x + 27, DECK_B - 16); ctx.lineTo(x + 16, DECK_B - 16); ctx.fill(); }
+    ctx.restore();
+    // height plate on the bridge
+    heightSign((DECK_L + DECK_R) / 2, DECK_T + 26, 22);
+  }
+  function heightSign(x, y, r) {
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#d4202a'; ctx.lineWidth = r * 0.22; ctx.beginPath(); ctx.arc(x, y, r * 0.88, 0, 7); ctx.stroke();
+    ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `bold ${r * 0.62}px ${FONT}`; ctx.fillText('3.2m', x, y + 1);
+    ctx.beginPath(); ctx.moveTo(x - r * 0.3, y - r * 0.58); ctx.lineTo(x, y - r * 0.42); ctx.lineTo(x + r * 0.3, y - r * 0.58); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - r * 0.3, y + r * 0.6); ctx.lineTo(x, y + r * 0.44); ctx.lineTo(x + r * 0.3, y + r * 0.6); ctx.fill();
+  }
+  function roadSign() {
+    // warning sign before the bridge
+    const x = 70, y = ROAD_Y - 150;
+    ctx.fillStyle = '#7a828c'; ctx.fillRect(x - 3, y, 6, 150);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#d4202a'; ctx.lineWidth = 7; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y - 44); ctx.lineTo(x + 38, y + 20); ctx.lineTo(x - 38, y + 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `bold 15px ${FONT}`; ctx.fillText('3.2m', x, y + 7);
+    ctx.beginPath(); ctx.moveTo(x - 7, y - 20); ctx.lineTo(x, y - 12); ctx.lineTo(x + 7, y - 20); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
+    ctx.fillRect(x - 36, y + 30, 72, 22); ctx.strokeRect(x - 36, y + 30, 72, 22);
+    ctx.fillStyle = '#111'; ctx.font = `bold 12px ${FONT}`; ctx.fillText('LOW BRIDGE', x, y + 41);
+  }
+
+  // ---------- van ----------
+  const WIN = [[L - 90, -182], [L - 56, -182], [L - 26, -126], [L - 90, -126]];
+  function bodyPath() {
+    ctx.beginPath();
+    ctx.moveTo(0, -40); ctx.lineTo(0, ROOF + 6); ctx.quadraticCurveTo(0, ROOF, 6, ROOF);
+    ctx.lineTo(L - 52, ROOF); ctx.lineTo(L - 14, -122); ctx.quadraticCurveTo(L + 2, -116, L + 2, -100);
+    ctx.lineTo(L + 4, -44); ctx.lineTo(0, -40); ctx.closePath();
+  }
+  function wheel(x) {
+    ctx.fillStyle = '#23272e'; ctx.beginPath(); ctx.arc(x, -30, 30, 0, 7); ctx.fill();
+    ctx.fillStyle = '#b9c0c8'; ctx.beginPath(); ctx.arc(x, -30, 13, 0, 7); ctx.fill();
+    ctx.fillStyle = '#7d858f'; ctx.beginPath(); ctx.arc(x, -30, 5, 0, 7); ctx.fill();
+  }
+  function driver(t, shocked) {
+    const hx = L - 58, hy = -150;
+    ctx.fillStyle = '#ffd08a'; ctx.strokeStyle = '#2b2f36'; ctx.lineWidth = 2;
+    // shoulders
+    ctx.fillStyle = '#ff7a1a'; ctx.beginPath(); ctx.ellipse(hx - 4, hy + 34, 24, 16, 0, Math.PI, 0); ctx.fill();
+    // hair
+    ctx.fillStyle = '#4a2c1a';
+    if (shocked) {
+      for (let i = -3; i <= 3; i++) {
+        const a = -Math.PI / 2 + i * 0.28, wob = Math.sin(t * 30 + i) * 0.05;
+        ctx.save(); ctx.translate(hx, hy - 8); ctx.rotate(a + Math.PI / 2 + wob);
+        ctx.beginPath(); ctx.moveTo(-5, 0); ctx.lineTo(0, -30 - (i % 2 ? 6 : 0)); ctx.lineTo(5, 0); ctx.fill(); ctx.restore();
+      }
+    } else { ctx.beginPath(); ctx.arc(hx, hy - 3, 16, Math.PI, 0); ctx.fill(); }
+    ctx.fillStyle = '#ffd08a'; ctx.beginPath(); ctx.arc(hx, hy, 15, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#111';
+    if (shocked) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(hx + 3, hy - 3, 5, 0, 7); ctx.arc(hx + 12, hy - 3, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#111';
+      ctx.beginPath(); ctx.arc(hx + 4, hy - 3, 2, 0, 7); ctx.arc(hx + 13, hy - 3, 2, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hx + 9, hy + 8, 3.5, 5, 0, 0, 7); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(hx + 5, hy - 3, 2, 0, 7); ctx.arc(hx + 12, hy - 3, 2, 0, 7); ctx.fill();
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hx + 8, hy + 4, 5, 0.2, Math.PI - 0.6); ctx.stroke();
+    }
+    // steering wheel
+    ctx.strokeStyle = '#2b2f36'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(hx + 22, hy + 16); ctx.lineTo(hx + 30, hy + 30); ctx.stroke();
+  }
+  function parcels() {
+    const boxes = [[18, 50, 34], [74, 46, 28], [126, 54, 38], [186, 42, 30]];
+    for (const [x, w, h] of boxes) {
+      ctx.fillStyle = '#c8955a'; ctx.strokeStyle = '#7a5530'; ctx.lineWidth = 2;
+      ctx.fillRect(x, CUT_Y + 26 - h, w, h); ctx.strokeRect(x, CUT_Y + 26 - h, w, h);
+      ctx.fillStyle = '#e8c48f'; ctx.fillRect(x + w / 2 - 4, CUT_Y + 26 - h, 8, h);
+    }
+  }
+  function tornEdge(x0, x1) {
+    if (x1 <= x0) return;
+    ctx.fillStyle = '#9aa3ad'; ctx.strokeStyle = '#2b2f36'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x0, CUT_Y + 3);
+    for (let x = x0; x <= x1; x += 6) ctx.lineTo(x, CUT_Y - 3 - 6 * hash(Math.floor(x / 6)));
+    ctx.lineTo(x1, CUT_Y + 3); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+
+  function van(t) {
+    const x = vanX(t);
+    const cutFrom = DECK_L - x;          // van-local x from which the roof is gone
+    const damaged = t >= T1;
+    const bounce = t < T1 ? Math.sin(t * 22) * 0.8 : 0;
+    ctx.save();
+    ctx.translate(x, ROAD_Y + bounce);
+    const jolt = damaged && t < T1 + 0.5 ? 1.5 * Math.sin((t - T1) * Math.PI / 0.5) : 0;
+    ctx.rotate(jolt * Math.PI / 180);
+
+    // cargo inside, only where the roof has been removed
+    if (damaged && cutFrom < L) {
+      ctx.save(); ctx.beginPath(); ctx.rect(Math.max(cutFrom, 0), -400, L, 400); ctx.clip();
+      ctx.fillStyle = '#39414b'; ctx.fillRect(4, CUT_Y - 2, L - 110, 30);
+      parcels(); ctx.restore();
+    }
+
+    // body, clipped so nothing above the cut survives past the bridge face
+    ctx.save();
+    if (damaged) {
+      ctx.beginPath();
+      ctx.rect(-50, -400, Math.max(cutFrom, -50) + 50, 500);
+      ctx.rect(-50, CUT_Y, L + 100, 200);
+      ctx.clip();
+    }
+    bodyPath(); ctx.fillStyle = '#f7f8fa'; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = '#2b2f36'; ctx.stroke();
+    // stripe, doors, lights
+    ctx.fillStyle = '#1f6fd1'; ctx.fillRect(3, -104, L - 2, 12);
+    ctx.fillStyle = '#ffb000'; ctx.fillRect(3, -92, L - 2, 5);
+    ctx.strokeStyle = 'rgba(43,47,54,0.5)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(L - 96, ROOF + 4); ctx.lineTo(L - 96, -44); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(L - 100, -120); ctx.lineTo(L - 100, -60); ctx.stroke();
+    ctx.fillStyle = '#ffe27a'; ctx.fillRect(L - 6, -94, 8, 14);
+    ctx.fillStyle = '#e0312b'; ctx.fillRect(-2, -130, 6, 22);
+    ctx.fillStyle = '#23272e'; ctx.fillRect(L - 8, -52, 14, 10); ctx.fillRect(-4, -50, 10, 8);
+    ctx.fillStyle = '#2b2f36'; ctx.font = `bold 18px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('DELIVERIES', (L - 100) / 2, -140);
+    // wheel arches
+    ctx.fillStyle = '#2b2f36';
+    ctx.beginPath(); ctx.arc(62, -34, 36, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(L - 64, -34, 36, Math.PI, 0); ctx.fill();
+    // window
+    ctx.beginPath(); WIN.forEach(([a, b], i) => i ? ctx.lineTo(a, b) : ctx.moveTo(a, b)); ctx.closePath();
+    ctx.fillStyle = '#bfe3f7'; ctx.fill();
+    ctx.restore();
+
+    const shocked = damaged && cutFrom < L - 60;
+    if (shocked) driver(t, true);
+    else { ctx.save(); ctx.beginPath(); WIN.forEach(([a, b], i) => i ? ctx.lineTo(a, b) : ctx.moveTo(a, b)); ctx.closePath(); ctx.clip(); driver(t, false); ctx.restore(); }
+    // glass tint over the driver, below the cut once it has gone
+    ctx.save();
+    if (damaged) { ctx.beginPath(); ctx.rect(-50, -400, Math.max(cutFrom, -50) + 50, 500); ctx.rect(-50, CUT_Y, L + 100, 200); ctx.clip(); }
+    ctx.beginPath(); WIN.forEach(([a, b], i) => i ? ctx.lineTo(a, b) : ctx.moveTo(a, b)); ctx.closePath();
+    ctx.fillStyle = 'rgba(160,210,240,0.35)'; ctx.fill(); ctx.strokeStyle = '#2b2f36'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.restore();
+
+    if (damaged) tornEdge(Math.max(cutFrom, 0), CONTACT);
+    wheel(62); wheel(L - 64);
+    ctx.restore();
+  }
+
+  // ---------- the roof that came off ----------
+  function crumple(w, h) {
+    ctx.fillStyle = '#eceef1'; ctx.strokeStyle = '#2b2f36'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    const n = Math.max(3, Math.round(w / 9));
+    for (let i = 0; i <= n; i++) ctx.lineTo(-w * i / n, -h * (0.55 + 0.45 * (i % 2)) - 4 * hash(i + 3));
+    ctx.lineTo(-w, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1f6fd1'; ctx.fillRect(-w * 0.7, -h * 0.35, w * 0.4, 5);
+  }
+  function roof(t) {
+    if (t < T1) return;
+    if (t < T2) {
+      const passed = (t - T1) * VG;
+      const w = 12 + passed * 0.16, h = 34 + passed * 0.06;
+      ctx.save(); ctx.translate(DECK_L, DECK_B + 2); crumple(w, h); ctx.restore();
+      return;
+    }
+    // falls off behind the van and bounces to rest
+    const w = 12 + CONTACT * 0.16, h = 34 + CONTACT * 0.06;
+    const d = t - T2, g = 1400;
+    const fallH = CLEAR - 2;
+    const tf = Math.sqrt(2 * fallH / g);
+    let y, rot, x = DECK_L - 8 * Math.min(d, tf) / tf;
+    if (d < tf) { y = DECK_B + 2 + 0.5 * g * d * d; rot = -0.9 * d / tf; }
+    else {
+      const d2 = d - tf, b = 0.28;
+      const hop = Math.max(0, 180 * d2 - 0.5 * g * d2 * d2);
+      y = ROAD_Y - (d2 < b ? hop : 0);
+      rot = -0.9 + 0.9 * ease(d2 / 0.4);
+      x -= 30 * ease(d2 / 0.6);
+    }
+    ctx.save(); ctx.translate(x - w / 2 + 8, y); ctx.rotate(rot); ctx.translate(w / 2, 0); crumple(w, h); ctx.restore();
+  }
+
+  // ---------- effects ----------
+  function sparks(t) {
+    if (t < T1 || t > T2 + 0.7) return;
+    for (let i = 0; i < 160; i++) {
+      const born = T1 + i * ((T2 - T1) / 160);
+      const age = t - born;
+      if (age < 0 || age > 0.6) continue;
+      const a = Math.PI + 0.2 + hash(i) * 1.6, sp = 180 + 260 * hash(i + 99);
+      const px = DECK_L + Math.cos(a) * sp * age, py = DECK_B + 4 - Math.sin(a) * sp * age + 500 * age * age;
+      if (py > ROAD_Y) continue;
+      ctx.globalAlpha = 1 - age / 0.6;
+      ctx.fillStyle = hash(i + 7) > 0.5 ? '#ffe45c' : '#ff9a1f';
+      ctx.fillRect(px - 2, py - 2, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function burst(x, y, r, spikes, fill, stroke) {
+    ctx.beginPath();
+    for (let i = 0; i < spikes * 2; i++) {
+      const a = i * Math.PI / spikes, rr = i % 2 ? r * 0.62 : r * (0.9 + 0.2 * hash(i));
+      ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = 5; ctx.stroke();
+  }
+  function crunch(t) {
+    const d = t - T1;
+    if (d < 0 || d > 1.3) return;
+    const s = back(d / 0.25) * (d > 1.0 ? 1 - (d - 1.0) / 0.3 : 1);
+    ctx.save(); ctx.translate(DECK_L - 40, DECK_T - 70); ctx.rotate(-0.12); ctx.scale(s, s);
+    burst(0, 0, 105, 12, '#ffd400', '#111');
+    ctx.fillStyle = '#e0312b'; ctx.strokeStyle = '#111'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
+    ctx.font = `900 44px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeText('CRUNCH!', 0, 2); ctx.fillText('CRUNCH!', 0, 2);
+    ctx.restore();
+  }
+  function scrape(t) {
+    if (t < T1 + 0.9 || t > T2 + 0.3) return;
+    const a = Math.min(1, (t - T1 - 0.9) / 0.2) * Math.min(1, (T2 + 0.3 - t) / 0.3);
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(DECK_R + 90, DECK_T - 40 + Math.sin(t * 40) * 2); ctx.rotate(0.08);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
+    ctx.font = `italic 900 30px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeText('SCRAAAAPE', 0, 0); ctx.fillText('SCRAAAAPE', 0, 0);
+    ctx.restore();
+  }
+  function oops(t) {
+    if (t < T3 - 0.1) return;
+    const s = back((t - T3 + 0.1) / 0.3);
+    const x = STOP + L - 20, y = ROAD_Y - 250;
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(0, 0, 40, 30, 0, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-18, 24); ctx.lineTo(-34, 50); ctx.lineTo(-4, 28); ctx.fill();
+    ctx.fillStyle = '#e0312b'; ctx.font = `900 34px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?!', 0, 2);
+    ctx.restore();
+  }
+
+  // ---------- text ----------
+  function wrap(text, maxW) {
+    const words = text.split(' '), lines = []; let cur = '';
+    for (const w of words) { const tryL = cur ? cur + ' ' + w : w; if (ctx.measureText(tryL).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tryL; }
+    if (cur) lines.push(cur); return lines;
+  }
+  function outlined(text, x, y, fill, stroke, lw) {
+    ctx.lineJoin = 'round'; ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.strokeText(text, x, y);
+    ctx.fillStyle = fill; ctx.fillText(text, x, y);
+  }
+  function topBanner(t) {
+    // "Low bridge ahead" on the way in
+    if (t > T1) return;
+    const a = Math.min(1, t / 0.4) * Math.min(1, (T1 - t) / 0.25);
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.fillStyle = '#ffd400'; ctx.strokeStyle = '#111'; ctx.lineWidth = 4;
+    roundRect(U / 2 - 190, 40, 380, 64, 14); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#111'; ctx.font = `900 34px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('LOW BRIDGE AHEAD', U / 2, 73);
+    ctx.restore();
+  }
+  function msg1(t) {
+    if (t < T_MSG1 || t > T_CARD + 0.4) return;
+    const s = back((t - T_MSG1) / 0.35), a = t > T_CARD ? 1 - (t - T_CARD) / 0.4 : 1;
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(U / 2, 110); ctx.scale(s, s); ctx.rotate(-0.03);
+    ctx.font = `900 50px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    outlined("DON'T MAKE THE VAN", 0, -32, '#fff', '#111', 10);
+    outlined('A CONVERTIBLE!', 0, 30, '#ffd400', '#111', 10);
+    ctx.restore();
+  }
+  function msg2(t) {
+    if (t < T_MSG2 || t > T_CARD + 0.4) return;
+    const a = ease((t - T_MSG2) / 0.4) * (t > T_CARD ? 1 - (t - T_CARD) / 0.4 : 1);
+    const dy = (1 - ease((t - T_MSG2) / 0.4)) * 30;
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.font = `bold 31px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff'; ctx.fillText('Know the height of your van', U / 2, 655 + dy);
+    ctx.fillText('before driving', U / 2, 694 + dy);
+    ctx.restore();
+  }
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function hazard(x, y, w, h) {
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    ctx.fillStyle = '#ffd400'; ctx.fillRect(x, y, w, h); ctx.fillStyle = '#111';
+    for (let xx = x - h; xx < x + w + h; xx += 36) { ctx.beginPath(); ctx.moveTo(xx, y + h); ctx.lineTo(xx + 18, y + h); ctx.lineTo(xx + 18 + h, y); ctx.lineTo(xx + h, y); ctx.fill(); }
+    ctx.restore();
+  }
+  function card(t) {
+    if (t < T_CARD) return;
+    const d = t - T_CARD;
+    ctx.save();
+    ctx.globalAlpha = ease(d / 0.4) * 0.95; ctx.fillStyle = '#0f1720'; ctx.fillRect(-40, -40, U + 80, U + 80);
+    ctx.globalAlpha = 1;
+    hazard(0, 0, U, 22); hazard(0, U - 22, U, 22);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    const a1 = ease((d - 0.2) / 0.4);
+    ctx.globalAlpha = a1; ctx.font = `900 52px ${FONT}`;
+    outlined("DON'T MAKE THE VAN", U / 2, 118 - 20 * (1 - a1), '#fff', '#000', 2);
+    outlined('A CONVERTIBLE!', U / 2, 178 - 20 * (1 - a1), '#ffd400', '#000', 2);
+
+    const a2 = ease((d - 0.9) / 0.4);
+    ctx.globalAlpha = a2; ctx.font = `bold 36px ${FONT}`; ctx.fillStyle = '#e8eef5';
+    ctx.fillText('Know the height of your van', U / 2, 285 - 16 * (1 - a2));
+    ctx.fillText('before driving', U / 2, 330 - 16 * (1 - a2));
+    ctx.font = `24px ${FONT}`; ctx.fillStyle = '#9fb3c8';
+    ctx.fillText('Check the height sticker in your cab and', U / 2, 385 - 16 * (1 - a2));
+    ctx.fillText('look out for low bridge signs', U / 2, 417 - 16 * (1 - a2));
+
+    const d3 = d - 1.7;
+    if (d3 > 0) {
+      const s = back(d3 / 0.35);
+      ctx.globalAlpha = 1; ctx.save(); ctx.translate(U / 2, 540); ctx.scale(s, s); ctx.rotate(-0.025);
+      ctx.fillStyle = '#e0312b'; roundRect(-300, -78, 600, 156, 18); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; roundRect(-289, -67, 578, 134, 12); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = `900 56px ${FONT}`;
+      ctx.fillText('IF IN DOUBT,', 0, -28); ctx.fillText('GET OUT!', 0, 32);
+      ctx.restore();
+      // small van icon peeking in, roof intact this time
+      const ia = ease((d3 - 0.6) / 0.4);
+      ctx.globalAlpha = ia; ctx.font = `bold 22px ${FONT}`; ctx.fillStyle = '#9fb3c8';
+      ctx.fillText('Stop, get out and look before you go under', U / 2, 662);
+    }
+    ctx.restore();
+  }
+
+  // ---------- frame ----------
+  function renderAt(t) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const k = cv.width / U;
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+
+    let sx = 0, sy = 0;
+    if (t >= T1 && t < T2 + 0.2) {
+      const d = t - T1, amp = 9 * Math.exp(-d * 4) + (t < T2 ? 1.6 : 0);
+      sx = Math.sin(t * 71) * amp; sy = Math.cos(t * 53) * amp;
+    }
+    ctx.save(); ctx.translate(sx, sy);
+    sky();
+    cloud(80 + t * 6, 190, 0.8); cloud(430 + t * 4, 150, 1.0); cloud(610 + t * 7, 250, 0.6);
+    hills(); road(); bridgeBack(); roadSign();
+    van(t);
+    bridgeFront();
+    roof(t);
+    sparks(t);
+    crunch(t); scrape(t); oops(t);
+    ctx.restore();
+    topBanner(t); msg1(t); msg2(t); card(t);
+  }
+
+  window.DURATION = DURATION;
+  window.renderAt = renderAt;
+
+  // Live playback when opened in a browser (render.js sets ?still to stop it)
+  if (!/[?&]still/.test(location.search)) {
+    let t0 = null;
+    const loop = (now) => { if (t0 === null) t0 = now; renderAt(((now - t0) / 1000) % DURATION); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+  } else renderAt(0);
+})();
+</script>
+</body>
+</html>

@@ -72,3 +72,16 @@ node rec2.js g=arcade gx-arcade still 1 2500
 node rec2.js "g=racer&auto=1" gx-racer video 34           # autopilot, 3 laps
 node rec2.js "g=shelves&auto=1" gx-shelves video 14        # also: coffee, fuelup, till, scramble, quiz, wash, queue, stack, simon
 ```
+
+## WhatsApp: low bridge reminder
+
+`whatsapp/low-bridge/low-bridge.mp4` is a 15-second, 1080×1080 H.264 video for the drivers' WhatsApp group. It shows a high-roof van hitting a 3.2 m bridge and coming out without a roof. It ends on the message "Don't make the van a convertible! Know the height of your van before driving. If in doubt, get out!"
+
+- `low-bridge.html` is the JavaScript canvas animation. Open it in a browser to watch it loop.
+- `render.js` steps through the animation frame by frame and encodes the MP4 with ffmpeg (libx264):
+
+```bash
+cd whatsapp/low-bridge
+node render.js                      # writes low-bridge.mp4 (set FFMPEG=/path/to/ffmpeg if needed)
+node render.js --stills 2.2,5,14 s  # PNG stills at those seconds, for checking
+```
