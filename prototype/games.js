@@ -153,13 +153,28 @@
       };
       if (ctx.opts.autostart) ctx.later(() => s.querySelector('button').click(), 300);
     };
-    ctx.end = (score, title, sub, again) => {
-      const prev = getBest(game.id), best = score > prev; if (best) setBest(game.id, score);
+    // o2.lower: lower is better (race times). o2.fmt formats a score for display.
+    ctx.end = (score, title, sub, again, o2) => {
+      o2 = o2 || {}; const lower = !!o2.lower, fmt = o2.fmt || (v => v);
+      const prev = getBest(game.id);
+      const best = lower ? (score > 0 && (!prev || score < prev)) : (score > 0 && score > prev);
+      if (best) setBest(game.id, score);
+      const mine = best ? score : prev;
       const e = document.createElement('div'); e.className = 'whg-end';
-      const lb = (ctx.opts.board || []).concat([{ n: 'You', s: Math.max(score, prev), me: 1 }]).sort((a, b) => b.s - a.s).slice(0, 4);
-      e.innerHTML = `<div class="whg-big">${best ? '🏆' : '🎉'}</div><h2 class="whg-h">${title}</h2><div class="whg-score">${score}</div><p class="whg-p">${sub || ''}</p>
-        ${best ? `<div class="whg-best">⭐ New personal best!</div>` : `<p class="whg-p" style="font-size:13px">Your best this week: ${prev}</p>`}
-        ${ctx.opts.board ? `<div class="whg-lb"><div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;font-weight:800">${ctx.opts.boardName || 'Top scores this week'}</div>${lb.map(r => `<div class="${r.me ? 'me' : ''}"><span>${r.n}</span><b>${r.s}</b></div>`).join('')}</div>` : ''}
+      let board = '';
+      if (ctx.opts.board) {
+        const rows = ctx.opts.board.map(r => Object.assign({}, r)).concat([{ n: ctx.opts.me || 'You', site: ctx.opts.mySite || '', s: mine, me: 1 }])
+          .sort((x, y) => lower ? x.s - y.s : y.s - x.s);
+        const pos = rows.findIndex(r => r.me) + 1, total = Math.max(rows.length, ctx.opts.boardTotal || 0);
+        const ord = (n) => n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th');
+        const top = rows.slice(0, 5); if (pos > 5) top.push(rows[pos - 1]);
+        board = `<div class="whg-lb"><div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;font-weight:800"><span>${ctx.opts.boardName || 'Leaderboard this week'}</span></div>
+          ${top.map(r => { const i = rows.indexOf(r) + 1; return `<div class="${r.me ? 'me' : ''}"><span><b style="display:inline-block;width:24px">${i <= 3 ? ['🥇', '🥈', '🥉'][i - 1] : i + '.'}</b>${r.n}${r.site ? ` <small style="color:#94a3b8;font-weight:500">${r.site}</small>` : ''}</span><b>${fmt(r.s)}</b></div>`; }).join('')}
+          <div style="justify-content:center;color:#fbbf24;font-weight:800;border-top:1px solid rgba(255,255,255,.08);margin-top:4px;padding-top:8px">You're ${ord(pos)} of ${total}</div></div>`;
+      }
+      e.innerHTML = `<div class="whg-big">${best ? '🏆' : '🎉'}</div><h2 class="whg-h">${title}</h2><div class="whg-score">${fmt(score)}</div><p class="whg-p">${sub || ''}</p>
+        ${best ? `<div class="whg-best">⭐ New personal best!</div>` : prev ? `<p class="whg-p" style="font-size:13px">Your best this week: ${fmt(prev)}</p>` : ''}
+        ${board}
         <button class="whg-btn">Play again</button><button class="whg-btn sec">Done</button>`;
       ctx.arena.appendChild(e);
       e.querySelector('.whg-btn').onclick = () => { e.remove(); again(); };
@@ -224,13 +239,40 @@
   }
 
   // ---------- 2. Fuel Gauge Hangman (4-letter forecourt words) ----------
-  const WORDS = [['FUEL', 'It goes in the tank'], ['PUMP', 'Where drivers fill up'], ['TILL', 'Where you take payment'], ['WASH', 'The car ___'], ['TYRE', 'Check its pressure'], ['MILK', 'Always in the fridge'], ['CARD', 'Scan the GO+ ___'], ['SHOP', 'Everything inside the forecourt'], ['CASH', 'Notes and coins'], ['COIN', 'A pound is one'], ['MINT', 'A fresh sweet'], ['OPEN', 'We are ___ 24 hours'], ['KEYS', 'Customers sometimes forget these'], ['LANE', 'Pump ___ 4']];
+  const WORDS = [
+    ["FUEL","It goes in the tank"], ["PUMP","Where drivers fill up"], ["TILL","Where you take payment"], ["WASH","The car ___"],
+    ["TYRE","Check its pressure"], ["MILK","Always in the fridge"], ["CARD","Scan the GO+ ___"], ["SHOP","Everything inside the forecourt"],
+    ["CASH","Notes and coins"], ["COIN","A pound is one"], ["MINT","A fresh sweet"], ["OPEN","We are ___ 24 hours"],
+    ["KEYS","Customers sometimes forget these"], ["LANE","Pump ___ 4"], ["FOOD","Deli2Go sells it"], ["CAKE","A sweet treat on the counter"],
+    ["BUNS","Hot dog ___"], ["ROLL","Bacon ___"], ["WRAP","Chicken ___ in the chiller"], ["SOUP","Hot in a cup on a cold day"],
+    ["TEAS","Coffee and ___"], ["CUPS","Stack them by the coffee machine"], ["LIDS","Keep the coffee in"], ["BAGS","Carrier ___ at the till"],
+    ["SALE","Half price ___"], ["DEAL","Meal ___"], ["SAVE","GO+ helps you ___"], ["GIFT","A present, or a ___ card"],
+    ["DRAW","Lottery ___"], ["GAME","Scratch card ___"], ["WINE","Red or white"], ["BEER","Ask for ID if they look under 25"],
+    ["GLUE","Solvent that needs ID"], ["VAPE","Age restricted, 18+"], ["ICED","___ coffee in summer"], ["COLA","A fizzy drink"],
+    ["SODA","A fizzy drink, in the USA"], ["CHIP","Card with a ___ and PIN"], ["SCAN","What you do with a barcode"], ["NOTE","A £10 ___"],
+    ["BILL","Another word for the receipt"], ["SIGN","Put up the wet floor ___"], ["MOPS","Clean the floor with these"], ["BINS","Empty these on the forecourt"],
+    ["OILS","Engine ___ on the shelf"], ["WIPE","Clean the counter with a ___"], ["SEAT","The driver's ___"], ["ROAD","Cars drive on it"],
+    ["TANK","Where the fuel goes"], ["FILL","___ her up!"], ["LEAK","Report a fuel ___ straight away"], ["SAFE","Cash goes in the ___"],
+    ["LOCK","Secure the door with a ___"], ["DOOR","Automatic ___ at the entrance"], ["VANS","Deliveries arrive in these"], ["CARS","They queue for the pumps"],
+    ["BIKE","Two wheels"], ["HORN","Beep beep!"], ["GEAR","First, second, third..."], ["MAPS","Road ___ on the shelf"],
+    ["SNOW","Grit the forecourt when it falls"], ["RAIN","Wet weather"], ["WARM","Hot drinks keep you ___"], ["COLD","Cans in the chiller are ___"],
+    ["RATE","Pump price per litre is the ___"], ["TEAM","Everyone on shift"], ["BOSS","The manager"], ["HELP","Can I ___ you?"],
+    ["NICE","___ to see you!"], ["KIND","Be ___ to every customer"], ["STAR","Five ___ review"]
+  ];
+  // A new word every time: words are drawn from a shuffled bag kept on the phone, so none
+  // repeats until every word has been used, then the bag is reshuffled.
+  function nextWord() {
+    let bag = []; try { bag = JSON.parse(localStorage.getItem('whg_hm_bag') || '[]'); } catch (_) {}
+    if (!bag.length) bag = WORDS.map((_, i) => i).sort(() => Math.random() - .5);
+    const i = bag.shift(); try { localStorage.setItem('whg_hm_bag', JSON.stringify(bag)); } catch (_) {}
+    return WORDS[i];
+  }
   function hangman(ctx) {
     const LIVES = 6; let round = 0, wins = 0;
     ctx.hud.innerHTML = `<div class="whg-pill"><b data-w>0</b><span>Words</span></div><div class="whg-pill"><b data-l>${LIVES}</b><span>Fuel left</span></div>`;
     const Wn = ctx.hud.querySelector('[data-w]'), Ln = ctx.hud.querySelector('[data-l]');
     const play = () => {
-      const pool = WORDS.slice().sort(() => Math.random() - .5); let [word, hint] = ctx.opts.word ? ctx.opts.word : pool[round % pool.length]; round++;
+      let [word, hint] = ctx.opts.word && round === 0 ? ctx.opts.word : nextWord(); round++;
       let lives = LIVES; const found = new Set(); Ln.textContent = lives;
       ctx.arena.innerHTML = `<div class="whg-hm">
         <div class="whg-gauge"><svg viewBox="0 0 220 124">
@@ -332,6 +374,8 @@
     { id: 'memory', icon: '🃏', name: 'Memory Match', how: 'Flip the cards and find the 6 forecourt pairs in as few moves as you can.', fn: memory },
     { id: 'goplus', icon: '💳', name: 'GO+ Grab', how: 'GO+ cards pop out of the pumps. Tap them before they vanish, but leave the spilled drinks!', fn: goGrab },
   ];
+  // Engine for the extra games in games-more.js.
+  window.WHG = { shell, SFX, tone, buzz, floatText, bump, getBest, GAMES, register: (g) => GAMES.push(g) };
   // Game of the week: a different game every Monday, same for everyone.
   window.whGameOfWeek = function () { const d = new Date(weekKey()); const wk = Math.floor(d.getTime() / (7 * 864e5)); return GAMES[wk % GAMES.length]; };
   window.whPlayGame = function (id, opts) { const g = GAMES.find(x => x.id === id) || whGameOfWeek(); const ctx = shell(g, opts); g.fn(ctx); return ctx; };
@@ -344,8 +388,8 @@
     const d = new Date(); const daysLeft = 7 - ((d.getDay() + 6) % 7);
     el.innerHTML = o.locked
       ? `<div class="ic">🔒</div><div><b>🎮 Game of the week: ${g.name}</b><span>Unlocks when you clock out. Have a great shift!</span></div>`
-      : `<div class="ic">${g.icon}</div><div><b>🎮 Game of the week</b><span>${g.name} · ${best ? 'your best ' + best : 'not played yet'} · new game in ${daysLeft} day${daysLeft > 1 ? 's' : ''}</span></div><div class="go">Play</div>`;
-    if (!o.locked) el.onclick = () => whPlayGame(g.id, o.playOpts);
+      : `<div class="ic">${g.icon}</div><div><b>🎮 Game of the week: ${g.name}</b><span>${o.pos ? `You're ${o.pos} on the SJC leaderboard` : best ? 'Your best ' + best : 'Not played yet'} · new game in ${daysLeft} day${daysLeft > 1 ? 's' : ''}${window.whArcade ? ` · <u>${GAMES.length} games in the Arcade</u>` : ''}</span></div><div class="go">Play</div>`;
+    if (!o.locked) el.onclick = (e) => { if (e.target.closest('u') && window.whArcade) return whArcade(o.arcadeOpts); whPlayGame(g.id, o.playOpts); };
     host.prepend(el); return el;
   };
 })();

@@ -62,3 +62,13 @@ node rec2.js "g=hangman&auto=1" gm-hm video 13
 node rec2.js "g=memory&auto=1" gm-mem video 23
 node rec2.js "g=goplus&auto=1&s=15" gm-go video 22
 ```
+
+## SJC Arcade (15 games)
+
+`prototype/games-more.js` adds 11 games on top of `games.js`: Forecourt Racer, Shelf Stacker, Coffee Rush, Fuel Up, Till Change, Word Scramble, Forecourt Quiz, Car Wash, Queue Buster, Crate Stack and Pump Simon. It also adds the Arcade screen (`whArcade`) and a weekly featured game. `boards.js` holds a sample SJC-wide leaderboard with positions (example names). Hangman (71 words), Word Scramble (48) and the Quiz (32) draw from shuffled lists kept on the phone, so nothing repeats until the whole list has been used.
+
+```bash
+node rec2.js g=arcade gx-arcade still 1 2500
+node rec2.js "g=racer&auto=1" gx-racer video 34           # autopilot, 3 laps
+node rec2.js "g=shelves&auto=1" gx-shelves video 14        # also: coffee, fuelup, till, scramble, quiz, wash, queue, stack, simon
+```
