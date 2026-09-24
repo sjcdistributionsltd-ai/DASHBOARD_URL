@@ -40,10 +40,9 @@
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  function greetingIn(name, isDriver) {
+  function greetingIn(name) {
     const h = new Date().getHours();
     if (h < 7) return pick([`Morning, early bird ☀️`, `Up with the larks, ${name}!`]);
-    if (isDriver) return pick([`Drive safe out there, ${name} 🚐`, `Have a great route, ${name}!`]);
     return pick([`You're in, ${name}! Have a great shift`, `Nice one ${name}, have a good shift!`, `Let's go, ${name} ⛽`]);
   }
   function greetingOut(name) {
@@ -79,7 +78,8 @@
     (function f(t) { const k = Math.min(1, (t - s) / ms), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(to * e); if (k < 1) requestAnimationFrame(f); })(s);
   }
 
-  // opts: { kind:'in'|'out', name, isDriver, onTime, earlyMins, streak, shiftCount, workedMins, breakMins, queued }
+  window.whConfetti = confetti;
+  // opts: { kind:'in'|'out', name, onTime, earlyMins, streak, shiftCount, workedMins, breakMins, queued }
   window.whCelebrate = function (o) {
     try { navigator.vibrate && navigator.vibrate(o.kind === 'in' ? [18, 60, 18] : [30]); } catch (_) {}
     const milestone = o.shiftCount && [1, 10, 25, 50, 100, 250, 500].includes(o.shiftCount);
@@ -92,7 +92,7 @@
       if (o.streak >= 3) chips.push(`<span class="whm-chip a" style="animation-delay:.75s">🔥 ${o.streak} on-time shifts in a row</span>`);
       if (milestone) chips.push(`<span class="whm-chip a" style="animation-delay:.9s">🎉 ${o.shiftCount === 1 ? 'First shift, welcome aboard!' : o.shiftCount + 'th shift!'}</span>`);
       body = `<div class="whm-badge in pop"><svg viewBox="0 0 48 48"><path d="M12 25 l8 8 l16 -18"/></svg></div>
-        <div class="whm-h">${greetingIn(o.name, o.isDriver)}</div>
+        <div class="whm-h">${greetingIn(o.name)}</div>
         <p class="whm-p">Clocked in at ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
         <div class="whm-chips">${chips.join('')}</div>`;
     } else {

@@ -29,3 +29,15 @@ node record.js in fun-in fixtures-staff.js,fixtures-fun.js enhance-fun.js video 
 node record.js out fun-out fixtures-staff.js enhance-fun.js video
 node record.js milestone fun-milestone fixtures-staff.js,fixtures-fun.js enhance-fun.js video
 ```
+
+## Rewards for forecourt staff
+
+`prototype/rewards.js` holds the badges shelf, the badge-unlock moment, the shout-out card and the Monday weekly recap. `enhance-kudos-dash.js` adds the manager's "🙌 Thank" button and shout-out dialog to the dashboard. Staff scenes are run with `rec2.js`:
+
+```bash
+node rec2.js r=shelf rw-shelf still
+node rec2.js r=unlock rw-unlock video 5
+node rec2.js r=shout rw-shout video 5
+node rec2.js "r=recap&s=2" rw-recap-2 still 1 5400   # s = slide to hold on
+node shoot.js "dashboard.html?k=modal" fixtures-dash.js rw-dash-thank.png enhance-kudos-dash.js 1440 900
+```

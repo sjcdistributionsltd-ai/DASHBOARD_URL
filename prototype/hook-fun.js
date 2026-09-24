@@ -25,7 +25,7 @@
       if (kind === 'in') {
         const shift = (window.__FIX.tables.shifts || [])[0];
         const early = shift ? Math.round((new Date(shift.start_at) - Date.now()) / 60000) : 0;
-        whCelebrate({ kind, name, isDriver: /driver/i.test(state.staff?.job_title || ''), onTime: early >= 0, earlyMins: early, streak: 5, shiftCount: new URLSearchParams(location.search).get('m') ? 100 : 37, queued });
+        whCelebrate({ kind, name, onTime: early >= 0, earlyMins: early, streak: 5, shiftCount: new URLSearchParams(location.search).get('m') ? 100 : 37, queued });
       } else {
         window.__whDone = true;
         const worked = p.clock ? (Date.now() - new Date(p.clock.clock_in_at)) / 60000 - 30 : 0;
