@@ -1,0 +1,57 @@
+diff --git a/scripts/droplet-cron/run_wa_safety.sh b/scripts/droplet-cron/run_wa_safety.sh
+index 97e934a..9b29bab 100644
+--- a/scripts/droplet-cron/run_wa_safety.sh
++++ b/scripts/droplet-cron/run_wa_safety.sh
+@@ -4,6 +4,11 @@
+ # /root/shell-pdi/assets/ is all it takes to change tomorrow's post.
+ cd /root/shell-pdi || exit 1
+ set -a; [ -f /root/shell-pdi/.env ] && . /root/shell-pdi/.env; set +a
+-docker cp /root/shell-pdi/assets/DBH3-height-warning.png amazon-desktop:/config/safety.png 2>/dev/null
++# The low bridge GIF wins when it is there (wa_safety_post.py makes the same choice).
++if [ -f /root/shell-pdi/assets/DBH3-low-bridge.gif ]; then
++  docker cp /root/shell-pdi/assets/DBH3-low-bridge.gif amazon-desktop:/config/safety.gif 2>/dev/null
++else
++  docker cp /root/shell-pdi/assets/DBH3-height-warning.png amazon-desktop:/config/safety.png 2>/dev/null
++fi
+ echo "=== $(date -Is) wa safety post ===" >> logs/wa-safety.log
+ /opt/amazon-desktop/report_job/venv/bin/python wa_safety_post.py "$@" >> logs/wa-safety.log 2>&1
+diff --git a/scripts/droplet-cron/wa_safety_post.py b/scripts/droplet-cron/wa_safety_post.py
+index bf1437f..4307710 100644
+--- a/scripts/droplet-cron/wa_safety_post.py
++++ b/scripts/droplet-cron/wa_safety_post.py
+@@ -9,8 +9,11 @@ paste event carrying the PNG (identical to a human pasting a screenshot),
+ type the caption into the media preview, click send. If the media path fails,
+ falls back to a text-only message so the reminder still lands.
+ 
+-Assets: /root/shell-pdi/assets/DBH3-height-warning.png and wa_safety_caption.txt
+-(edit the txt to change the daily message). Cron 11:00+12:00 UTC with a UK-hour
++Assets: /root/shell-pdi/assets/DBH3-low-bridge.gif if it is there (the low
++bridge animation; WhatsApp sends a .gif as a GIF, which plays on a loop in the
++chat without a tap), otherwise DBH3-height-warning.png, plus wa_safety_caption.txt
++(edit the txt to change the daily message). Delete the .gif to go back to the
++poster. Cron 11:00+12:00 UTC with a UK-hour
+ guard = always 12:00 UK. Heartbeat: wa-safety-post. Self-verifies via the DOM
+ after sending; the shadow feed mirrors it within a minute as a second witness.
+ 
+@@ -25,8 +28,10 @@ from cdp_mini import Tab, container_ip
+ SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+ SB_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
+ GROUP = "DBH3 Driver Chat on the road Issues"
+-IMG = "/root/shell-pdi/assets/DBH3-height-warning.png"
+-CONTAINER_IMG = "/config/safety.png"   # docker cp'd copy INSIDE amazon-desktop
++GIF = "/root/shell-pdi/assets/DBH3-low-bridge.gif"
++PNG = "/root/shell-pdi/assets/DBH3-height-warning.png"
++# docker cp'd copy INSIDE amazon-desktop (run_wa_safety.sh makes the same choice)
++IMG, CONTAINER_IMG = (GIF, "/config/safety.gif") if os.path.exists(GIF) else (PNG, "/config/safety.png")
+ CAPTION_FILE = "/root/shell-pdi/assets/wa_safety_caption.txt"
+ 
+ def log(m): print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] {m}", flush=True)
+@@ -350,7 +355,7 @@ def main():
+         # only: we never fall back after clicking send (double-post risk).
+         last = t.eval("""(() => {
+           const rows = [...document.querySelectorAll('#main [data-id]')].slice(-3);
+-          const img = rows.some(el => el.querySelector('img[src^="blob:"], [data-icon="status-image"], img[draggable]'));
++          const img = rows.some(el => el.querySelector('img[src^="blob:"], [data-icon="status-image"], img[draggable], video, [data-icon="media-gif"]'));
+           const tail = rows.length ? (rows[rows.length-1].innerText || '').slice(0, 80) : 'none';
+           return (img ? 'WITH_IMAGE | ' : 'NO_IMAGE_SEEN | ') + tail;
+         })()""") or ""

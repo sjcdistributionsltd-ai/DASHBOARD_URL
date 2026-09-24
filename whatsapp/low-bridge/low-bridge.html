@@ -27,7 +27,7 @@
   // Scene layout
   const ROAD_Y = 540;            // top of the road surface
   const DECK_L = 176, DECK_R = 316;
-  const CLEAR = 160;             // bridge clearance (3.2 m at 50 units per metre)
+  const CLEAR = 160;             // bridge clearance: 2.2 m, with the van roof (195) at 2.7 m
   const CUT_Y = -CLEAR;          // cut line in van coordinates (y up is negative)
   const L = 320;                 // van length
   const ROOF = -195;             // van roof height
@@ -130,7 +130,7 @@
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
     ctx.strokeStyle = '#d4202a'; ctx.lineWidth = r * 0.22; ctx.beginPath(); ctx.arc(x, y, r * 0.88, 0, 7); ctx.stroke();
     ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `bold ${r * 0.62}px ${FONT}`; ctx.fillText('3.2m', x, y + 1);
+    ctx.font = `bold ${r * 0.62}px ${FONT}`; ctx.fillText('2.2m', x, y + 1);
     ctx.beginPath(); ctx.moveTo(x - r * 0.3, y - r * 0.58); ctx.lineTo(x, y - r * 0.42); ctx.lineTo(x + r * 0.3, y - r * 0.58); ctx.fill();
     ctx.beginPath(); ctx.moveTo(x - r * 0.3, y + r * 0.6); ctx.lineTo(x, y + r * 0.44); ctx.lineTo(x + r * 0.3, y + r * 0.6); ctx.fill();
   }
@@ -141,7 +141,7 @@
     ctx.fillStyle = '#fff'; ctx.strokeStyle = '#d4202a'; ctx.lineWidth = 7; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(x, y - 44); ctx.lineTo(x + 38, y + 20); ctx.lineTo(x - 38, y + 20); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `bold 15px ${FONT}`; ctx.fillText('3.2m', x, y + 7);
+    ctx.font = `bold 15px ${FONT}`; ctx.fillText('2.2m', x, y + 7);
     ctx.beginPath(); ctx.moveTo(x - 7, y - 20); ctx.lineTo(x, y - 12); ctx.lineTo(x + 7, y - 20); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
     ctx.fillRect(x - 36, y + 30, 72, 22); ctx.strokeRect(x - 36, y + 30, 72, 22);
@@ -429,8 +429,8 @@
     ctx.fillText('Know the height of your van', U / 2, 285 - 16 * (1 - a2));
     ctx.fillText('before driving', U / 2, 330 - 16 * (1 - a2));
     ctx.font = `24px ${FONT}`; ctx.fillStyle = '#9fb3c8';
-    ctx.fillText('Check the height sticker in your cab and', U / 2, 385 - 16 * (1 - a2));
-    ctx.fillText('look out for low bridge signs', U / 2, 417 - 16 * (1 - a2));
+    ctx.fillText('Your van is 2.7m tall. Check every bridge,', U / 2, 385 - 16 * (1 - a2));
+    ctx.fillText('barrier and car park sign before you go under', U / 2, 417 - 16 * (1 - a2));
 
     const d3 = d - 1.7;
     if (d3 > 0) {
@@ -444,7 +444,7 @@
       // small van icon peeking in, roof intact this time
       const ia = ease((d3 - 0.6) / 0.4);
       ctx.globalAlpha = ia; ctx.font = `bold 22px ${FONT}`; ctx.fillStyle = '#9fb3c8';
-      ctx.fillText('Stop, get out and look before you go under', U / 2, 662);
+      ctx.fillText('Not sure it fits? Stop, get out and look', U / 2, 662);
     }
     ctx.restore();
   }
