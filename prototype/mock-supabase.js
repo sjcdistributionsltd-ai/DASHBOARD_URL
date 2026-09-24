@@ -4,6 +4,8 @@
   const now = new Date();
   const iso = (d) => new Date(d).toISOString();
   function resolve(kind, name, st) {
+    const w = st.filters.find(([k]) => k === 'insert' || k === 'update' || k === 'upsert');
+    if (w) { const pl = Array.isArray(w[1][0]) ? w[1][0] : [Object.assign({ id: 'new-' + Math.random().toString(36).slice(2, 8) }, w[1][0])]; return { data: st.single ? pl[0] : pl, error: null, count: pl.length }; }
     const src = (kind === 'rpc' ? (F().rpc || {}) : (F().tables || {}))[name];
     let rows = typeof src === 'function' ? src(st) : (src === undefined ? (kind === 'rpc' ? null : []) : src);
     if (rows === null || rows === undefined) return { data: kind === 'rpc' ? null : [], error: null, count: 0 };

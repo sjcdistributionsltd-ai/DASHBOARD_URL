@@ -18,3 +18,14 @@ node shoot.js "dashboard.html?scene=overview" fixtures-dash.js out.png enhance-d
 Staff scenes: `hero`, `clocked`, `offline`, `geofence`, `rota`. Dashboard scenes: `overview`, `palette`, `table`, `confirm`.
 
 The prototype is for the screenshots only. It is not production code, and nothing in the `workhive` repo has been changed.
+
+## Clock-in and clock-out moments
+
+`prototype/celebrate.js` holds the animations: a tick, confetti and a thank-you message on clock-in, and a wave with the shift's numbers on clock-out. `hook-fun.js` connects it to the real Clock in button. To record a video or take a still:
+
+```bash
+cat enhance-staff.js celebrate.js hook-fun.js > enhance-fun.js
+node record.js in fun-in fixtures-staff.js,fixtures-fun.js enhance-fun.js video   # or: still
+node record.js out fun-out fixtures-staff.js enhance-fun.js video
+node record.js milestone fun-milestone fixtures-staff.js,fixtures-fun.js enhance-fun.js video
+```

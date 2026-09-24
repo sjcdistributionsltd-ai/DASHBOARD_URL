@@ -78,7 +78,9 @@
         const sp = prog.querySelectorAll('.wh-progmeta span'); sp[0].textContent = 'Clocked in ' + fmt(state.currentClock.clock_in_at); sp[1].textContent = 'Break due ' + fmt(s + 4 * 36e5) + ' · ends ' + fmt(e);
       } else {
         prog.style.display = 'none';
-        if (n > s) { line.className = 'wh-shiftline late'; line.innerHTML = `<span style="font-size:20px">⏰</span><span>Your shift started ${dur(n - s)} ago<small>${where}</small></span>`; }
+        const bt = document.getElementById('big-time'); bt.style.fontSize = '';
+        if (window.__whDone) { line.className = 'wh-shiftline on'; line.innerHTML = `<span style="font-size:20px">✅</span><span>Shift complete, see you next time<small>${where}</small></span>`; bt.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); }
+        else if (n > s) { line.className = 'wh-shiftline late'; line.innerHTML = `<span style="font-size:20px">⏰</span><span>Your shift started ${dur(n - s)} ago<small>${where}</small></span>`; }
         else { line.className = 'wh-shiftline soon'; line.innerHTML = `<span style="font-size:20px">🕑</span><span>Shift starts in ${dur(s - n)}<small>${where}</small></span>`; }
       }
     };
