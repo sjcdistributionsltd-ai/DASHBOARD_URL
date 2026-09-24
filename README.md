@@ -45,3 +45,8 @@ node shoot.js "dashboard.html?k=modal" fixtures-dash.js rw-dash-thank.png enhanc
 ## Birthdays and work anniversaries
 
 `prototype/birthday.js` adds the floating balloons you can tap to pop, the top banner and the Today card. It plays once on the day, using `date_of_birth` and `start_date`, which the staff app already loads. Run `node rec2.js r=bday bd-bday video 13` or `r=anniv`.
+
+## On-time stamp and training complete
+
+- `celebrate.js` now adds an "ON TIME" stamp, the message "Right on time! Have a great shift" and confetti for an on-time clock-in. An on-time clock-out (within 10 minutes of the shift end) gets "Shift done, right on time. Thank you!". Late clock-ins get the friendly message only. Run `node record.js out ot-out fixtures-staff.js,fixtures-outontime.js enhance-fun.js video`.
+- `training.js` compares the two latest `shell_training_rag` rows. When nothing is outstanding it shows the graduation-cap certificate. When some modules are done it shows a "Module complete, N to go" progress card. Run `node rec2.js r=train tr-done video 7` or `r=trainstep`.

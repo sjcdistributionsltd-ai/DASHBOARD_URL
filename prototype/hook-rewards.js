@@ -37,6 +37,12 @@
       }
       window.scrollTo(0, 0);
     }
+    if (r === 'train' || r === 'trainstep') {
+      try { Object.keys(localStorage).filter(k => k.startsWith('wh_train_seen_')).forEach(k => localStorage.removeItem(k)); } catch (_) {}
+      const prev = { report_date: '2026-09-17', outstanding: ['Age Restricted Sales', 'Fire Safety', 'Fuel Spill Response'] };
+      const now = r === 'train' ? { report_date: '2026-09-24', outstanding: [] } : { report_date: '2026-09-24', outstanding: ['Fuel Spill Response'] };
+      whTrainingCheck([now, prev], state.staff, { site: state.site?.name || 'Shell Winnall', org: 'SJC Fuel Services', hold: true });
+    }
     if (r === 'unlock') whBadgeUnlock('goplus', 'You hit 26.1% GO+ this week at Shell Winnall. Target was 25%. Brilliant!');
     if (r === 'shout') whShoutout(kudo);
     if (r === 'recap') whRecap({ range: '15–21 Sep', site: 'Shell Winnall', name: 'Jordan', hours: 38.5, shifts: 5, streak: 12, goplus: 26.1, target: 25, goplusLast: 23.5, scans: 108,

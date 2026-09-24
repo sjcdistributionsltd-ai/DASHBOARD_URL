@@ -25,17 +25,23 @@
   .whm-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
   .whm-chip{font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;opacity:0;transform:translateY(8px);animation:whmUp .35s ease-out forwards}
   .whm-chip.g{background:rgba(16,185,129,.15);color:#6ee7b7}.whm-chip.a{background:rgba(251,191,36,.15);color:#fde68a}
+  .whm-card{position:relative}
+  .whm-stamp{position:absolute;top:16px;right:14px;border:3px solid #34d399;color:#34d399;border-radius:10px;padding:5px 9px 4px;font:900 13px/1.05 -apple-system,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;text-align:center;transform:rotate(-12deg);opacity:0;animation:whmSlam .42s cubic-bezier(.2,1.6,.4,1) .55s forwards;background:rgba(16,185,129,.08)}
+  .whm-stamp small{display:block;font-size:9px;letter-spacing:.12em;opacity:.85}
+  .whm-card.thud{animation:whmThud .25s ease .8s}
   .whm-tap{font-size:12px;color:#64748b;margin-top:14px}
   .whm-conf{position:fixed;inset:0;pointer-events:none;z-index:9991}
   .clock-btn{transition:transform .12s ease}
   .clock-btn:active{transform:scale(.96)}
   .clock-btn.whm-press{animation:whmPress .5s ease}
+  @keyframes whmSlam{0%{opacity:0;transform:rotate(-12deg) scale(2.6)}70%{opacity:1;transform:rotate(-12deg) scale(.92)}100%{opacity:1;transform:rotate(-12deg) scale(1)}}
+  @keyframes whmThud{0%,100%{transform:none}30%{transform:translateY(3px) scale(.99)}60%{transform:translateY(-1px)}}
   @keyframes whmDraw{to{stroke-dashoffset:0}}
   @keyframes whmPop{0%{transform:scale(.2)}100%{transform:scale(1)}}
   @keyframes whmWave{0%,100%{transform:rotate(0)}20%{transform:rotate(18deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(14deg)}80%{transform:rotate(-4deg)}}
   @keyframes whmUp{to{opacity:1;transform:none}}
   @keyframes whmPress{0%{box-shadow:0 0 0 0 rgba(16,185,129,.6)}100%{box-shadow:0 0 0 22px rgba(16,185,129,0)}}
-  @media (prefers-reduced-motion: reduce){.whm-card,.whm-scrim{transition:none}.whm-badge.pop,.whm-wave,.whm-chip,.clock-btn.whm-press{animation:none}.whm-chip{opacity:1;transform:none}.whm-badge path{animation:none;stroke-dashoffset:0}}
+  @media (prefers-reduced-motion: reduce){.whm-card,.whm-scrim{transition:none}.whm-badge.pop,.whm-wave,.whm-chip,.clock-btn.whm-press,.whm-card.thud{animation:none}.whm-stamp{animation:none;opacity:1}.whm-chip{opacity:1;transform:none}.whm-badge path{animation:none;stroke-dashoffset:0}}
   `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -79,7 +85,7 @@
   }
 
   window.whConfetti = confetti;
-  // opts: { kind:'in'|'out', name, onTime, earlyMins, streak, shiftCount, workedMins, breakMins, queued }
+  // opts: { kind:'in'|'out', name, onTime, earlyMins, streak, shiftCount, workedMins, breakMins, weekHours, stayedMins, queued }
   window.whCelebrate = function (o) {
     try { navigator.vibrate && navigator.vibrate(o.kind === 'in' ? [18, 60, 18] : [30]); } catch (_) {}
     const milestone = o.shiftCount && [1, 10, 25, 50, 100, 250, 500].includes(o.shiftCount);
@@ -92,21 +98,22 @@
       if (o.streak >= 3) chips.push(`<span class="whm-chip a" style="animation-delay:.75s">🔥 ${o.streak} on-time shifts in a row</span>`);
       if (milestone) chips.push(`<span class="whm-chip a" style="animation-delay:.9s">🎉 ${o.shiftCount === 1 ? 'First shift, welcome aboard!' : o.shiftCount + 'th shift!'}</span>`);
       body = `<div class="whm-badge in pop"><svg viewBox="0 0 48 48"><path d="M12 25 l8 8 l16 -18"/></svg></div>
-        <div class="whm-h">${greetingIn(o.name)}</div>
+        <div class="whm-h">${o.onTime ? `Right on time, ${o.name}! Have a great shift` : greetingIn(o.name)}</div>
         <p class="whm-p">Clocked in at ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
         <div class="whm-chips">${chips.join('')}</div>`;
     } else {
       body = `<div class="whm-badge out pop"><span class="whm-wave">👋</span></div>
-        <div class="whm-h">${greetingOut(o.name)}</div>
-        <p class="whm-p">That's your shift done. See you next time!</p>
+        <div class="whm-h">${o.onTime ? `Shift done, right on time. Thank you, ${o.name}!` : o.stayedMins > 5 ? `Thanks for staying on, ${o.name}` : greetingOut(o.name)}</div>
+        <p class="whm-p">${o.onTime ? 'You did the full shift. Enjoy the rest of your day!' : "That's your shift done. See you next time!"}</p>
         <div class="whm-stats">
           <div class="whm-stat"><b data-k="w">0h 00m</b><span>Worked</span></div>
           <div class="whm-stat"><b data-k="b">0m</b><span>Break</span></div>
           <div class="whm-stat"><b data-k="wk">0.0h</b><span>This week</span></div>
         </div>
-        ${o.queued ? '<div class="whm-chips"><span class="whm-chip a" style="animation-delay:.5s">📶 Saved on this phone, will sync</span></div>' : ''}`;
+        <div class="whm-chips">${o.onTime && o.streak >= 3 ? `<span class="whm-chip a" style="animation-delay:.9s">🔥 ${o.streak} full shifts on time in a row</span>` : ''}${o.stayedMins > 5 ? `<span class="whm-chip a" style="animation-delay:.9s">💛 Stayed ${o.stayedMins} min extra</span>` : ''}${o.queued ? '<span class="whm-chip a" style="animation-delay:.5s">📶 Saved on this phone, will sync</span>' : ''}</div>`;
     }
-    scrim.innerHTML = `<div class="whm-card" role="status" aria-live="polite">${body}<div class="whm-tap">Tap anywhere to close</div></div>`;
+    const stamp = o.onTime ? `<div class="whm-stamp">On time<small>✓ ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</small></div>` : '';
+    scrim.innerHTML = `<div class="whm-card${o.onTime ? ' thud' : ''}" role="status" aria-live="polite">${stamp}${body}<div class="whm-tap">Tap anywhere to close</div></div>`;
     document.body.appendChild(scrim);
     requestAnimationFrame(() => scrim.classList.add('show'));
     if (o.kind === 'out') {
@@ -115,7 +122,10 @@
       countUp(scrim.querySelector('[data-k=b]'), o.breakMins || 0, (m) => Math.round(m) + 'm', 700);
       countUp(scrim.querySelector('[data-k=wk]'), o.weekHours || 0, (h) => h.toFixed(1) + 'h', 1000);
     }
-    setTimeout(() => confetti(o.kind === 'in' && milestone), o.kind === 'in' ? 300 : 9e9);
+    // Confetti only for good news: on time, or a milestone. A late clock-in still gets a
+    // friendly message, just without the party.
+    if (o.onTime || milestone) setTimeout(() => confetti(milestone), 820);
+    if (o.onTime) setTimeout(() => { try { navigator.vibrate && navigator.vibrate(25); } catch (_) {} }, 800);
     const close = () => { scrim.classList.remove('show'); setTimeout(() => scrim.remove(), 300); };
     scrim.addEventListener('click', close);
     if (!window.__WHM_HOLD) setTimeout(close, 4200);

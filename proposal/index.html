@@ -109,7 +109,7 @@
     <p class="lede">A review of <code>app.html</code> (staff) and <code>dashboard.html</code> (managers and owner), with a list of JavaScript changes and screenshots of how each one looks. Everything is added on top of the current app. No tables, permissions or pay data change, and every change is designed to make pages faster, not slower.</p>
     <div class="facts">
       <span class="fact"><b>5</b> bugs to fix first, 3 of them lose clock-in data</span>
-      <span class="fact"><b>8</b> staff app upgrades + <b>5</b> fun moments + <b>4</b> rewards</span>
+      <span class="fact"><b>8</b> staff app upgrades + <b>6</b> fun moments + <b>5</b> rewards</span>
       <span class="fact"><b>9</b> dashboard upgrades</span>
       <span class="fact">dashboard: <b>1.78 MB</b> single file, <b>100</b> pop-up dialogs, <b>11</b> polling timers</span>
     </div>
@@ -190,15 +190,18 @@
       <div class="item"><div class="id">F3</div><div><h3>Milestones get the big confetti</h3><p>First shift, 10th, 25th, 50th, 100th, 250th and 500th. Kept rare so they stay special.</p></div><div class="gain"><span class="tag green">Fun</span></div></div>
       <div class="item"><div class="id">F4</div><div><h3>Messages that fit the person and the time</h3><p>"Morning, early bird" before 7am, "Let's go ⛽" or "Have a great shift" on the forecourt. If the phone has no signal, the moment still plays and adds "Saved on this phone, will sync".</p></div><div class="gain"><span class="tag green">Fun</span></div></div>
       <div class="item"><div class="id">F5</div><div><h3>Small touches around the app</h3><p>Cards slide in gently when the app opens, and the tab icon bounces when tapped. The clock button shrinks slightly under the thumb.</p></div><div class="gain"><span class="tag green">Fun</span></div></div>
+      <div class="item"><div class="id">F6</div><div><h3>"ON TIME" stamp for clocking in and out on time</h3><p>Clocking in on time (or early) turns the message into "Right on time, Jordan! Have a great shift", and a green "ON TIME ✓ 13:58" stamp slams onto the card with a thud, a buzz and confetti. Clocking out within 10 minutes of the shift end gives "Shift done, right on time. Thank you, Jordan!" with the same stamp and "🔥 5 full shifts on time in a row". Staying later gives "Thanks for staying on 💛 Stayed 20 min extra". Clocking in late still gets a friendly "You're in", just without the stamp or confetti.</p></div><div class="gain"><span class="tag green">Fun</span></div></div>
     </div>
     <div class="try">
       <div><b>Try it here</b><span>These buttons play the same code that would ship in the app.</span></div>
-      <div class="try-btns"><button type="button" id="try-in" class="tb in">Clock in</button><button type="button" id="try-out" class="tb out">Clock out</button><button type="button" id="try-ms" class="tb ms">100th shift</button></div>
+      <div class="try-btns"><button type="button" id="try-ontime" class="tb in">On-time clock in</button><button type="button" id="try-ontime-out" class="tb out">On-time clock out</button><button type="button" id="try-in" class="tb in">Clock in</button><button type="button" id="try-out" class="tb out">Clock out</button><button type="button" id="try-ms" class="tb ms">100th shift</button></div>
     </div>
     <div class="phones">
       <figure><div class="frame"><video src="img/fun-in.webm" poster="img/fun-in.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>F1 · Clock in</b>Recorded in the real staff app: the real Clock in button, with the new moment on top.</figcaption></figure>
       <figure><div class="frame"><video src="img/fun-out.webm" poster="img/fun-out.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>F2 · Clock out</b>The hours count up, and the card behind now reads "Shift complete".</figcaption></figure>
       <figure><div class="frame"><video src="img/fun-milestone.webm" poster="img/fun-milestone.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>F3 · 100th shift</b>A milestone gets a bigger burst and its own chip.</figcaption></figure>
+      <figure><div class="frame"><video src="img/ot-in.webm" poster="img/ot-in.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>F6 · On-time clock in</b>"Right on time, Jordan! Have a great shift", with the ON TIME stamp and confetti.</figcaption></figure>
+      <figure><div class="frame"><video src="img/ot-out.webm" poster="img/ot-out.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>F6 · On-time clock out</b>"Shift done, right on time. Thank you, Jordan!", with the stamp and the on-time streak.</figcaption></figure>
     </div>
     <div class="rails">
       <div class="rail"><h3>Never in the way</h3><p>The moment plays after the clock event is saved or queued. It closes itself after 4 seconds, or with one tap.</p></div>
@@ -211,7 +214,7 @@
   <section id="rewards">
     <div class="sec-head">
       <div class="eyebrow">Staff app · rewards for the forecourt team</div>
-      <h2>Badges, shout-outs, weekly recap and birthdays</h2>
+      <h2>Badges, shout-outs, weekly recap, birthdays and training</h2>
       <p>Built around what matters on a Shell forecourt: GO+ scans, RLA training, customer feedback, turning up on time and helping the team out. Staff only ever see their own progress, and nothing negative is shown or animated.</p>
     </div>
     <div class="items">
@@ -219,10 +222,11 @@
       <div class="item"><div class="id">R2</div><div><h3>Manager shout-outs</h3><p>A "🙌 Thank" button next to each person on the dashboard. The manager picks a reason (covered a shift, great with customers, GO+ star, spotless site, smashed the delivery, went the extra mile) and adds a line. The staff member gets a push notification and a celebration in the app, and the shout-out stays on their Profile. It can also appear on the site team's Today screen.</p></div><div class="gain"><span class="tag amber">1 new table</span></div></div>
       <div class="item"><div class="id">R3</div><div><h3>Monday weekly recap</h3><p>A short story-style recap the first time they open the app on a Monday: hours worked, on-time shifts and streak, GO+ against the 25% target, the site's customer score with a real customer comment, and badges earned. Tap to skip ahead, and it never shows again that week.</p></div><div class="gain"><span class="tag green">No new tables</span></div></div>
       <div class="item"><div class="id">R4</div><div><h3>Birthdays and work anniversaries</h3><p>On someone's birthday, the first time they open the app balloons float up the screen, a "Happy birthday, Jordan! 🎂" banner drops in from the top and the phone buzzes. They can tap the balloons to pop them. Each pop makes a soft "pop" sound, with a little confetti burst and a counter ("🎈 8 popped"). One golden balloon glows and floats up more slowly. Popping it reveals a hidden message, such as the manager's note "There's cake in the staff room". Popping every balloon gives "🎉 You got them all!" and a big burst of confetti. On their start-date anniversary they get "1 year at SJC Fuel Services!" with balloons and confetti. A card stays on the Today tab all day to replay it. It plays once per day and only for that person, so nobody's date of birth is shown to anyone else.</p></div><div class="gain"><span class="tag green">No new tables</span></div></div>
+      <div class="item"><div class="id">R5</div><div><h3>Training complete</h3><p>When the weekly RLA report shows nothing outstanding, the next time they open the app a graduation cap is thrown in the air and lands on a certificate with their name, the modules they finished, their site and the date. Then comes confetti and "🎓 Fully trained badge unlocked". If some modules are done but others are still owed, a smaller card slides up: "Module complete: Fire Safety. Just 1 to go, you're nearly there!", with a progress bar filling up. It compares the latest RLA report with the one before, so no new data is needed, and each report is celebrated once.</p></div><div class="gain"><span class="tag green">No new tables</span></div></div>
     </div>
     <div class="try">
       <div><b>Try it here</b><span>These buttons play the same code that would ship in the app.</span></div>
-      <div class="try-btns"><button type="button" id="try-bday" class="tb ms">🎈 Birthday</button><button type="button" id="try-badge" class="tb ms">New badge</button><button type="button" id="try-kudo" class="tb in">Shout-out</button><button type="button" id="try-recap" class="tb out">Weekly recap</button></div>
+      <div class="try-btns"><button type="button" id="try-bday" class="tb ms">🎈 Birthday</button><button type="button" id="try-train" class="tb in">🎓 Training complete</button><button type="button" id="try-trainstep" class="tb out">Module done</button><button type="button" id="try-badge" class="tb ms">New badge</button><button type="button" id="try-kudo" class="tb in">Shout-out</button><button type="button" id="try-recap" class="tb out">Weekly recap</button></div>
     </div>
     <div class="phones">
       <figure><div class="frame"><img src="img/rw-shelf.png" alt="Profile tab with badge shelf, 6 of 9 earned, and a shout-out from the manager" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>R1 · Badges shelf</b>On the Profile tab: earned badges in colour, locked ones with progress, and the latest shout-out underneath.</figcaption></figure>
@@ -231,6 +235,8 @@
       <figure><div class="frame"><video src="img/rw-recap.webm" poster="img/rw-recap-2.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>R3 · Weekly recap</b>Five slides on a Monday: hours, on-time, GO+, customers and badges.</figcaption></figure>
       <figure><div class="frame"><video src="img/bd-pop.webm" poster="img/bd-bday.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>R4 · Birthday, popping balloons</b>Balloons float up and the banner drops in. Taps pop them, the counter ticks up and the golden balloon opens its message. (Videos have no sound, so try the button on this page to hear the pop.)</figcaption></figure>
       <figure><div class="frame"><img src="img/bd-gold.png" alt="Golden balloon message: Happy birthday Jordan, there's cake in the staff room, from Sarah and the Winnall team" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>R4 · Golden balloon</b>The hidden message from the manager. Without a note it says "Happy birthday Jordan! From everyone at Shell Winnall".</figcaption></figure>
+      <figure><div class="frame"><video src="img/tr-done.webm" poster="img/tr-done.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>R5 · All training complete</b>The cap is thrown up and lands on a certificate with the modules finished, then confetti and the badge.</figcaption></figure>
+      <figure><div class="frame"><video src="img/tr-step.webm" poster="img/tr-step.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>R5 · Module done</b>The progress bar fills when some modules are done, with a nudge that the rest is nearly there.</figcaption></figure>
       <figure><div class="frame"><video src="img/bd-anniv.webm" poster="img/bd-anniv.png" autoplay muted loop playsinline></video></div><figcaption><b><span class="tag green label">Video</span>R4 · Work anniversary</b>The same party for their start date, with confetti and a thank-you.</figcaption></figure>
     </div>
     <div class="desk">
@@ -295,8 +301,8 @@
     </div>
     <ol class="steps">
       <li><div><b>Bug fixes 1 to 5</b><span>Offline queue, weak-signal taps, sync on open, Overview counts, Library tile. Smallest changes, biggest risk removed.</span></div></li>
-      <li><div><b>Staff clock card, sync chip and clock-in moments (S1, S2, S6, S8, F1 to F5)</b><span>Trial at one site first (Winnall), then all four stations.</span></div></li>
-      <li><div><b>Rewards: badges, recap, birthdays and shout-outs (R1 to R4)</b><span>Badges, the recap and birthdays first (no database change), then shout-outs once the new table is added.</span></div></li>
+      <li><div><b>Staff clock card, sync chip and clock-in moments (S1, S2, S6, S8, F1 to F6)</b><span>Trial at one site first (Winnall), then all four stations.</span></div></li>
+      <li><div><b>Rewards: badges, recap, birthdays, training and shout-outs (R1 to R5)</b><span>Badges, the recap, birthdays and training first (no database change), then shout-outs once the new table is added.</span></div></li>
       <li><div><b>Dashboard speed (D6, D7, D8) and links (D2)</b><span>Quick wins that don't change what managers see.</span></div></li>
       <li><div><b>Ctrl+K search, needs-attention row, table tools (D1, D3, D4)</b><span>Visible upgrades for managers and the owner.</span></div></li>
       <li><div><b>Dialogs, drafts and unsaved-change warnings (S3, S7, D5, D9)</b><span>Done panel by panel. There are 100 pop-ups to replace, so this runs over several releases.</span></div></li>
@@ -334,17 +340,23 @@
   .whm-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
   .whm-chip{font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;opacity:0;transform:translateY(8px);animation:whmUp .35s ease-out forwards}
   .whm-chip.g{background:rgba(16,185,129,.15);color:#6ee7b7}.whm-chip.a{background:rgba(251,191,36,.15);color:#fde68a}
+  .whm-card{position:relative}
+  .whm-stamp{position:absolute;top:16px;right:14px;border:3px solid #34d399;color:#34d399;border-radius:10px;padding:5px 9px 4px;font:900 13px/1.05 -apple-system,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;text-align:center;transform:rotate(-12deg);opacity:0;animation:whmSlam .42s cubic-bezier(.2,1.6,.4,1) .55s forwards;background:rgba(16,185,129,.08)}
+  .whm-stamp small{display:block;font-size:9px;letter-spacing:.12em;opacity:.85}
+  .whm-card.thud{animation:whmThud .25s ease .8s}
   .whm-tap{font-size:12px;color:#64748b;margin-top:14px}
   .whm-conf{position:fixed;inset:0;pointer-events:none;z-index:9991}
   .clock-btn{transition:transform .12s ease}
   .clock-btn:active{transform:scale(.96)}
   .clock-btn.whm-press{animation:whmPress .5s ease}
+  @keyframes whmSlam{0%{opacity:0;transform:rotate(-12deg) scale(2.6)}70%{opacity:1;transform:rotate(-12deg) scale(.92)}100%{opacity:1;transform:rotate(-12deg) scale(1)}}
+  @keyframes whmThud{0%,100%{transform:none}30%{transform:translateY(3px) scale(.99)}60%{transform:translateY(-1px)}}
   @keyframes whmDraw{to{stroke-dashoffset:0}}
   @keyframes whmPop{0%{transform:scale(.2)}100%{transform:scale(1)}}
   @keyframes whmWave{0%,100%{transform:rotate(0)}20%{transform:rotate(18deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(14deg)}80%{transform:rotate(-4deg)}}
   @keyframes whmUp{to{opacity:1;transform:none}}
   @keyframes whmPress{0%{box-shadow:0 0 0 0 rgba(16,185,129,.6)}100%{box-shadow:0 0 0 22px rgba(16,185,129,0)}}
-  @media (prefers-reduced-motion: reduce){.whm-card,.whm-scrim{transition:none}.whm-badge.pop,.whm-wave,.whm-chip,.clock-btn.whm-press{animation:none}.whm-chip{opacity:1;transform:none}.whm-badge path{animation:none;stroke-dashoffset:0}}
+  @media (prefers-reduced-motion: reduce){.whm-card,.whm-scrim{transition:none}.whm-badge.pop,.whm-wave,.whm-chip,.clock-btn.whm-press,.whm-card.thud{animation:none}.whm-stamp{animation:none;opacity:1}.whm-chip{opacity:1;transform:none}.whm-badge path{animation:none;stroke-dashoffset:0}}
   `;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -388,7 +400,7 @@
   }
 
   window.whConfetti = confetti;
-  // opts: { kind:'in'|'out', name, onTime, earlyMins, streak, shiftCount, workedMins, breakMins, queued }
+  // opts: { kind:'in'|'out', name, onTime, earlyMins, streak, shiftCount, workedMins, breakMins, weekHours, stayedMins, queued }
   window.whCelebrate = function (o) {
     try { navigator.vibrate && navigator.vibrate(o.kind === 'in' ? [18, 60, 18] : [30]); } catch (_) {}
     const milestone = o.shiftCount && [1, 10, 25, 50, 100, 250, 500].includes(o.shiftCount);
@@ -401,21 +413,22 @@
       if (o.streak >= 3) chips.push(`<span class="whm-chip a" style="animation-delay:.75s">🔥 ${o.streak} on-time shifts in a row</span>`);
       if (milestone) chips.push(`<span class="whm-chip a" style="animation-delay:.9s">🎉 ${o.shiftCount === 1 ? 'First shift, welcome aboard!' : o.shiftCount + 'th shift!'}</span>`);
       body = `<div class="whm-badge in pop"><svg viewBox="0 0 48 48"><path d="M12 25 l8 8 l16 -18"/></svg></div>
-        <div class="whm-h">${greetingIn(o.name)}</div>
+        <div class="whm-h">${o.onTime ? `Right on time, ${o.name}! Have a great shift` : greetingIn(o.name)}</div>
         <p class="whm-p">Clocked in at ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
         <div class="whm-chips">${chips.join('')}</div>`;
     } else {
       body = `<div class="whm-badge out pop"><span class="whm-wave">👋</span></div>
-        <div class="whm-h">${greetingOut(o.name)}</div>
-        <p class="whm-p">That's your shift done. See you next time!</p>
+        <div class="whm-h">${o.onTime ? `Shift done, right on time. Thank you, ${o.name}!` : o.stayedMins > 5 ? `Thanks for staying on, ${o.name}` : greetingOut(o.name)}</div>
+        <p class="whm-p">${o.onTime ? 'You did the full shift. Enjoy the rest of your day!' : "That's your shift done. See you next time!"}</p>
         <div class="whm-stats">
           <div class="whm-stat"><b data-k="w">0h 00m</b><span>Worked</span></div>
           <div class="whm-stat"><b data-k="b">0m</b><span>Break</span></div>
           <div class="whm-stat"><b data-k="wk">0.0h</b><span>This week</span></div>
         </div>
-        ${o.queued ? '<div class="whm-chips"><span class="whm-chip a" style="animation-delay:.5s">📶 Saved on this phone, will sync</span></div>' : ''}`;
+        <div class="whm-chips">${o.onTime && o.streak >= 3 ? `<span class="whm-chip a" style="animation-delay:.9s">🔥 ${o.streak} full shifts on time in a row</span>` : ''}${o.stayedMins > 5 ? `<span class="whm-chip a" style="animation-delay:.9s">💛 Stayed ${o.stayedMins} min extra</span>` : ''}${o.queued ? '<span class="whm-chip a" style="animation-delay:.5s">📶 Saved on this phone, will sync</span>' : ''}</div>`;
     }
-    scrim.innerHTML = `<div class="whm-card" role="status" aria-live="polite">${body}<div class="whm-tap">Tap anywhere to close</div></div>`;
+    const stamp = o.onTime ? `<div class="whm-stamp">On time<small>✓ ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</small></div>` : '';
+    scrim.innerHTML = `<div class="whm-card${o.onTime ? ' thud' : ''}" role="status" aria-live="polite">${stamp}${body}<div class="whm-tap">Tap anywhere to close</div></div>`;
     document.body.appendChild(scrim);
     requestAnimationFrame(() => scrim.classList.add('show'));
     if (o.kind === 'out') {
@@ -424,7 +437,10 @@
       countUp(scrim.querySelector('[data-k=b]'), o.breakMins || 0, (m) => Math.round(m) + 'm', 700);
       countUp(scrim.querySelector('[data-k=wk]'), o.weekHours || 0, (h) => h.toFixed(1) + 'h', 1000);
     }
-    setTimeout(() => confetti(o.kind === 'in' && milestone), o.kind === 'in' ? 300 : 9e9);
+    // Confetti only for good news: on time, or a milestone. A late clock-in still gets a
+    // friendly message, just without the party.
+    if (o.onTime || milestone) setTimeout(() => confetti(milestone), 820);
+    if (o.onTime) setTimeout(() => { try { navigator.vibrate && navigator.vibrate(25); } catch (_) {} }, 800);
     const close = () => { scrim.classList.remove('show'); setTimeout(() => scrim.remove(), 300); };
     scrim.addEventListener('click', close);
     if (!window.__WHM_HOLD) setTimeout(close, 4200);
@@ -807,6 +823,101 @@
   };
 })();
 
+// WorkHive training celebrations for SJC Fuel Services (Shell RLA mandatory training).
+// Reads the two latest shell_training_rag rows the app already has access to. A module that
+// was outstanding in the previous report and is gone from the latest one has been completed.
+// Each report is celebrated once per phone. Needs celebrate.js (confetti).
+(function () {
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const css = `
+  .wht-ov{position:fixed;inset:0;z-index:9992;background:radial-gradient(ellipse at 50% 35%,rgba(30,58,138,.85),rgba(2,6,23,.95));display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .3s}
+  .wht-ov.show{opacity:1}
+  .wht-wrap{width:100%;max-width:360px;position:relative;text-align:center}
+  .wht-cap{font-size:84px;line-height:1;display:inline-block;position:relative;z-index:2;animation:whtToss 1.5s cubic-bezier(.3,.7,.4,1) both;filter:drop-shadow(0 10px 18px rgba(0,0,0,.4))}
+  .wht-cert{margin-top:-18px;background:#fffbeb;color:#422006;border-radius:6px;padding:30px 22px 22px;position:relative;box-shadow:0 0 0 6px #fbbf24,0 0 0 8px #fef3c7,0 24px 60px rgba(0,0,0,.5);transform:translateY(40px) scale(.9);opacity:0;animation:whtCert .6s cubic-bezier(.34,1.56,.64,1) .7s forwards}
+  .wht-cert::before{content:'';position:absolute;inset:8px;border:1.5px solid rgba(180,83,9,.35);border-radius:3px;pointer-events:none}
+  .wht-eye{font:800 11px/1 -apple-system,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#b45309}
+  .wht-name{font:italic 700 30px/1.15 Georgia,"Times New Roman",serif;margin:12px 0 6px}
+  .wht-line{font-size:14px;line-height:1.45;color:#78350f;max-width:26ch;margin:0 auto}
+  .wht-mods{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0 4px}
+  .wht-mods span{font-size:11px;font-weight:700;background:rgba(16,185,129,.14);color:#047857;border-radius:99px;padding:4px 9px;opacity:0;animation:whtIn .3s ease-out forwards}
+  .wht-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;font-size:11px;color:#92400e;text-align:left}
+  .wht-seal{width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fde68a,#d97706);display:grid;place-items:center;font-size:26px;box-shadow:0 4px 10px rgba(146,64,14,.35);position:relative}
+  .wht-seal::after{content:'';position:absolute;inset:5px;border-radius:50%;border:2px dashed rgba(255,255,255,.6)}
+  .wht-chip{display:inline-block;margin-top:18px;background:rgba(59,130,246,.18);color:#bfdbfe;font-weight:700;font-size:14px;border-radius:99px;padding:8px 14px;opacity:0;animation:whtIn .4s ease-out 1.4s forwards}
+  .wht-btn{display:block;width:100%;margin-top:14px;padding:15px;border:0;border-radius:14px;background:#fbbf24;color:#0f172a;font:700 16px -apple-system,system-ui,sans-serif;opacity:0;animation:whtIn .4s ease-out 1.6s forwards}
+  .wht-step{position:fixed;left:16px;right:16px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:9992;background:#1e293b;border:1px solid rgba(16,185,129,.45);border-radius:18px;padding:16px 16px 14px;color:#f1f5f9;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:translateY(140%);transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+  .wht-step.show{transform:none}
+  .wht-step .top{display:flex;gap:12px;align-items:center}
+  .wht-step .ic{width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,#6ee7b7,#10b981);display:grid;place-items:center;font-size:22px;flex-shrink:0;animation:whtPop .5s cubic-bezier(.34,1.56,.64,1) .2s both}
+  .wht-step b{display:block;font-size:15px}
+  .wht-step span{font-size:13px;color:#94a3b8}
+  .wht-bar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);margin:14px 0 6px;overflow:hidden}
+  .wht-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#10b981,#6ee7b7);transition:width 1s cubic-bezier(.2,.8,.2,1) .5s}
+  .wht-meta{display:flex;justify-content:space-between;font-size:12px;color:#94a3b8}
+  @keyframes whtToss{0%{transform:translateY(240px) rotate(0) scale(.6);opacity:0}15%{opacity:1}55%{transform:translateY(-160px) rotate(540deg) scale(1)}100%{transform:translateY(0) rotate(720deg) scale(1)}}
+  @keyframes whtCert{to{transform:none;opacity:1}}
+  @keyframes whtIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes whtPop{from{transform:scale(.3)}to{transform:scale(1)}}
+  @media (prefers-reduced-motion: reduce){.wht-cap,.wht-cert,.wht-mods span,.wht-chip,.wht-btn,.wht-step .ic{animation:none;opacity:1;transform:none}.wht-step{transition:none}}
+  `;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  const esc = (t) => String(t).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+
+  // All training complete: the cap is thrown, the certificate lands, confetti.
+  window.whTrainingDone = function (o) {
+    try { navigator.vibrate && navigator.vibrate([30, 60, 30, 60, 80]); } catch (_) {}
+    const ov = document.createElement('div'); ov.className = 'wht-ov';
+    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    ov.innerHTML = `<div class="wht-wrap"><div class="wht-cap">🎓</div>
+      <div class="wht-cert">
+        <div class="wht-eye">Certificate of completion</div>
+        <div class="wht-name">${esc(o.fullName)}</div>
+        <p class="wht-line">has completed all Shell RLA mandatory training. Nothing outstanding. Brilliant work!</p>
+        <div class="wht-mods">${(o.modules || []).map((m, i) => `<span style="animation-delay:${1.2 + i * .12}s">✓ ${esc(m)}</span>`).join('')}</div>
+        <div class="wht-foot"><div>${esc(o.site)}<br>${date}</div><div class="wht-seal">⭐</div><div style="text-align:right">${esc(o.org)}<br>Retail Learning Academy</div></div>
+      </div>
+      <div class="wht-chip">🎓 Fully trained badge unlocked</div>
+      <button class="wht-btn">Brilliant, thanks!</button></div>`;
+    document.body.appendChild(ov); requestAnimationFrame(() => ov.classList.add('show'));
+    setTimeout(() => window.whConfetti && whConfetti(true), 1300);
+    const close = () => { ov.classList.remove('show'); setTimeout(() => ov.remove(), 300); };
+    ov.querySelector('.wht-btn').onclick = close;
+  };
+
+  // One or more modules done but some still to go: a small progress card.
+  window.whTrainingStep = function (o) {
+    const total = o.doneNow.length + o.left + (o.doneBefore || 0);
+    const before = total - o.left - o.doneNow.length, after = total - o.left;
+    const el = document.createElement('div'); el.className = 'wht-step'; el.setAttribute('role', 'status');
+    el.innerHTML = `<div class="top"><div class="ic">✅</div><div><b>${o.doneNow.length === 1 ? 'Module complete: ' + esc(o.doneNow[0]) : o.doneNow.length + ' modules complete'}</b>
+      <span>${o.left === 1 ? "Just 1 to go, you're nearly there!" : o.left + ' to go. Keep it up, ' + esc(o.name) + '!'}</span></div></div>
+      <div class="wht-bar"><i style="width:${Math.round(100 * before / total)}%"></i></div>
+      <div class="wht-meta"><span>${after} of ${total} done</span><span>Due by month end</span></div>`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => { el.classList.add('show'); requestAnimationFrame(() => { el.querySelector('i').style.width = Math.round(100 * after / total) + '%'; }); });
+    setTimeout(() => { const r = el.querySelector('.ic').getBoundingClientRect(); window.whConfettiAt && whConfettiAt(r.left + r.width / 2, r.top + r.height / 2, 30); }, 700);
+    try { navigator.vibrate && navigator.vibrate([20, 40, 20]); } catch (_) {}
+    el.onclick = () => { el.classList.remove('show'); setTimeout(() => el.remove(), 500); };
+    if (!o.hold) setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 500); }, 6000);
+  };
+
+  // Production trigger, called from loadMyTraining() with the two latest rows (newest first).
+  window.whTrainingCheck = function (rows, staff, extra) {
+    if (!rows || rows.length < 2) return;
+    const [now, prev] = rows;
+    const out = Array.isArray(now.outstanding) ? now.outstanding : [];
+    const was = Array.isArray(prev.outstanding) ? prev.outstanding : [];
+    const doneNow = was.filter(m => !out.includes(m));
+    if (!doneNow.length) return;
+    const key = 'wh_train_seen_' + now.report_date;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (_) {}
+    const base = Object.assign({ name: staff.preferred_name || staff.first_name, fullName: staff.first_name + ' ' + staff.last_name }, extra || {});
+    if (!out.length) whTrainingDone(Object.assign(base, { modules: doneNow }));
+    else whTrainingStep(Object.assign(base, { doneNow, left: out.length }));
+  };
+})();
+
 (function(){
   var st=document.createElement('style');st.textContent='.whr-ov,.whr-story{--accent:#fbbf24;--muted:#94a3b8;--card:#1e293b;--border:rgba(255,255,255,.1)}';document.head.appendChild(st);
   function on(id,f){var b=document.getElementById(id);if(b)b.onclick=f;}
@@ -814,6 +925,10 @@
   on('try-out',function(){whCelebrate({kind:'out',name:'Jordan',workedMins:492,breakMins:30,weekHours:30.2});});
   on('try-ms',function(){whCelebrate({kind:'in',name:'Jordan',onTime:true,earlyMins:0,streak:12,shiftCount:100});});
   on('try-bday',function(){whBirthday({kind:'birthday',name:'Jordan',org:'SJC Fuel Services',site:'Shell Winnall',note:'Happy birthday Jordan! There\'s cake in the staff room, enjoy your day 🎂',from:'Sarah and the Winnall team'});});
+  on('try-ontime',function(){whCelebrate({kind:'in',name:'Jordan',onTime:true,earlyMins:0,streak:5,shiftCount:37});});
+  on('try-ontime-out',function(){whCelebrate({kind:'out',name:'Jordan',onTime:true,streak:5,workedMins:480,breakMins:30,weekHours:38.5});});
+  on('try-train',function(){whTrainingDone({fullName:'Jordan Ellis',name:'Jordan',site:'Shell Winnall',org:'SJC Fuel Services',modules:['Age Restricted Sales','Fire Safety','Fuel Spill Response']});});
+  on('try-trainstep',function(){whTrainingStep({name:'Jordan',doneNow:['Fire Safety'],left:1,doneBefore:1});});
   on('try-badge',function(){whBadgeUnlock('goplus','You hit 26.1% GO+ this week at Shell Winnall. Target was 25%. Brilliant!');});
   on('try-kudo',function(){whShoutout({from:'Sarah Mills',tag:'Covered a shift',msg:'Thanks for jumping in on Sunday at such short notice. You saved the day and the site ran perfectly!'});});
   on('try-recap',function(){whRecap({range:'15–21 Sep',site:'Shell Winnall',name:'Jordan',hours:38.5,shifts:5,streak:12,goplus:26.1,target:25,goplusLast:23.5,scans:108,quote:'The lady on the till this morning was so friendly and helpful, best Shell around!',smg:9.1,badges:['💳 GO+ Hero','⏰ On the dot','🤝 Team player']});});

@@ -29,7 +29,10 @@
       } else {
         window.__whDone = true;
         const worked = p.clock ? (Date.now() - new Date(p.clock.clock_in_at)) / 60000 - 30 : 0;
-        whCelebrate({ kind, name, workedMins: worked, breakMins: 30, weekHours: 30.2, queued });
+        // On time = clocked out within 10 min after the scheduled end; later than that = stayed on.
+        const shift = (window.__FIX.tables.shifts || [])[0];
+        const diff = shift ? Math.round((Date.now() - new Date(shift.end_at)) / 60000) : -1;
+        whCelebrate({ kind, name, workedMins: worked, breakMins: 30, weekHours: 30.2, queued, onTime: diff >= 0 && diff <= 10, stayedMins: diff > 10 ? diff : 0, streak: 5 });
       }
     } return r; }; };
   wrap('renderClockedIn', 'in'); wrap('renderClockedOut', 'out');
