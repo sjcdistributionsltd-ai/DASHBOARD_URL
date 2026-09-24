@@ -17,6 +17,14 @@
         window.scrollTo(0, hdr.offsetTop + hdr.offsetHeight - 70);
       }, 400);
     }
+    if (r === 'bday' || r === 'anniv') {
+      try { Object.keys(localStorage).filter(k => k.startsWith('wh_bday_seen_')).forEach(k => localStorage.removeItem(k)); } catch (_) {}
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+      if (r === 'bday') state.staff.date_of_birth = '1998' + today.slice(4);
+      else { state.staff.date_of_birth = '1998-02-11'; state.staff.start_date = '2025' + today.slice(4); }
+      whCheckBirthday(state.staff, state.org);
+      window.scrollTo(0, 0);
+    }
     if (r === 'unlock') whBadgeUnlock('goplus', 'You hit 26.1% GO+ this week at Shell Winnall. Target was 25%. Brilliant!');
     if (r === 'shout') whShoutout(kudo);
     if (r === 'recap') whRecap({ range: '15–21 Sep', site: 'Shell Winnall', name: 'Jordan', hours: 38.5, shifts: 5, streak: 12, goplus: 26.1, target: 25, goplusLast: 23.5, scans: 108,

@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const [,, qs, outp, mode, secs = '6', waitms = '4200'] = process.argv;
 const PUB = process.env.WORKHIVE_PUBLIC || '../workhive/public', H = __dirname;
-const ENH = ['enhance-staff.js', 'celebrate.js', 'rewards.js', 'hook-rewards.js'].map(f => fs.readFileSync(path.join(H, f), 'utf8')).join('\n');
+const ENH = ['enhance-staff.js', 'celebrate.js', 'rewards.js', 'birthday.js', 'hook-rewards.js'].map(f => fs.readFileSync(path.join(H, f), 'utf8')).join('\n');
 (async () => {
   const b = await chromium.launch();
   const o = { viewport: { width: 390, height: 844 }, deviceScaleFactor: mode === 'video' ? 1 : 2, serviceWorkers: 'block', timezoneId: 'Europe/London' };

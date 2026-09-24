@@ -41,3 +41,7 @@ node rec2.js r=shout rw-shout video 5
 node rec2.js "r=recap&s=2" rw-recap-2 still 1 5400   # s = slide to hold on
 node shoot.js "dashboard.html?k=modal" fixtures-dash.js rw-dash-thank.png enhance-kudos-dash.js 1440 900
 ```
+
+## Birthdays and work anniversaries
+
+`prototype/birthday.js` adds the floating balloons you can tap to pop, the top banner and the Today card. It plays once on the day, using `date_of_birth` and `start_date`, which the staff app already loads. Run `node rec2.js r=bday bd-bday video 13` or `r=anniv`.
