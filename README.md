@@ -50,3 +50,15 @@ node shoot.js "dashboard.html?k=modal" fixtures-dash.js rw-dash-thank.png enhanc
 
 - `celebrate.js` now adds an "ON TIME" stamp, the message "Right on time! Have a great shift" and confetti for an on-time clock-in. An on-time clock-out (within 10 minutes of the shift end) gets "Shift done, right on time. Thank you!". Late clock-ins get the friendly message only. Run `node record.js out ot-out fixtures-staff.js,fixtures-outontime.js enhance-fun.js video`.
 - `training.js` compares the two latest `shell_training_rag` rows. When nothing is outstanding it shows the graduation-cap certificate. When some modules are done it shows a "Module complete, N to go" progress card. Run `node rec2.js r=train tr-done video 7` or `r=trainstep`.
+
+## Game of the week
+
+`prototype/games.js` holds four mini games that rotate every Monday: Balloon Blitz, Fuel Gauge Hangman, Memory Match and GO+ Grab. They run entirely on the phone, save personal bests on the phone and are locked while clocked in. An optional site top-scores list would need one small table. `hook-games.js` stages each scene with scripted taps:
+
+```bash
+node rec2.js g=card gm-card still 1 2600
+node rec2.js "g=blitz&auto=1&s=15" gm-blitz video 24
+node rec2.js "g=hangman&auto=1" gm-hm video 13
+node rec2.js "g=memory&auto=1" gm-mem video 23
+node rec2.js "g=goplus&auto=1&s=15" gm-go video 22
+```
