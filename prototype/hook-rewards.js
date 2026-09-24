@@ -22,7 +22,19 @@
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
       if (r === 'bday') state.staff.date_of_birth = '1998' + today.slice(4);
       else { state.staff.date_of_birth = '1998-02-11'; state.staff.start_date = '2025' + today.slice(4); }
-      whCheckBirthday(state.staff, state.org);
+      whCheckBirthday(state.staff, state.org, { site: state.site?.name, hold: !!q.get('hold'),
+        note: r === 'bday' ? 'Happy birthday Jordan! There\'s cake in the staff room, enjoy your day 🎂' : null, from: r === 'bday' ? 'Sarah and the Winnall team' : null });
+      if (q.get('auto')) {
+        // Simulated taps for the recording: pop balloons that are on screen, the golden one at ~5.5s.
+        let t = 0; const iv = setInterval(() => { t += 420;
+          const vis = [...document.querySelectorAll('.whb-bal:not(.pop)')].filter(b => { const r = b.getBoundingClientRect(); return r.top > 330 && r.top < 760; });
+          const gold = vis.find(b => b.classList.contains('gold'));
+          const pick = (t > 5200 && gold) ? gold : vis.filter(b => !b.classList.contains('gold'))[Math.floor(Math.random() * vis.length)];
+          if (pick) pick.click();
+          if (t > 5200 && gold || t > 12000) { if (!q.get('all')) clearInterval(iv); }
+          if (t > 14000) clearInterval(iv);
+        }, 420);
+      }
       window.scrollTo(0, 0);
     }
     if (r === 'unlock') whBadgeUnlock('goplus', 'You hit 26.1% GO+ this week at Shell Winnall. Target was 25%. Brilliant!');
