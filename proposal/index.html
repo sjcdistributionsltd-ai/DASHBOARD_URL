@@ -1,0 +1,234 @@
+<title>WorkHive JS Upgrade Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root {
+    --bg: #f3f5f8; --surface: #ffffff; --ink: #0f172a; --muted: #516079; --line: #dde3ec;
+    --amber: #fbbf24; --amber-ink: #92400e; --amber-soft: #fef3c7;
+    --red: #b91c1c; --red-soft: #fde8e8; --green: #15803d; --green-soft: #e3f5e9; --blue-soft: #e6eefc; --blue: #1d4ed8;
+    --shot: #0f172a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0b1120; --surface: #131c2e; --ink: #eef2f8; --muted: #9aa8bf; --line: #24304a;
+      --amber-ink: #fcd34d; --amber-soft: #3a2c0c; --red: #fca5a5; --red-soft: #3b1518;
+      --green: #86efac; --green-soft: #10301d; --blue-soft: #14244a; --blue: #93b4ff; --shot: #000;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b1120; --surface: #131c2e; --ink: #eef2f8; --muted: #9aa8bf; --line: #24304a;
+    --amber-ink: #fcd34d; --amber-soft: #3a2c0c; --red: #fca5a5; --red-soft: #3b1518;
+    --green: #86efac; --green-soft: #10301d; --blue-soft: #14244a; --blue: #93b4ff; --shot: #000;
+  }
+  body { background: var(--bg); color: var(--ink); font: 400 16px/1.6 "IBM Plex Sans", system-ui, sans-serif; padding: 0 20px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 48px 80px; display: grid; gap: 56px; }
+  h1, h2, h3 { font-family: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif; text-wrap: balance; margin: 0; line-height: 1.15; }
+  h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; letter-spacing: -0.02em; }
+  h2 { font-size: 28px; font-weight: 800; letter-spacing: -0.01em; }
+  h3 { font-size: 19px; font-weight: 600; }
+  p { margin: 0; max-width: 68ch; }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.84em; }
+  code { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; white-space: nowrap; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  header { display: grid; gap: 18px; }
+  header .lede { font-size: 19px; color: var(--muted); max-width: 62ch; }
+  .facts { display: flex; flex-wrap: wrap; gap: 10px; }
+  .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 14px; }
+  .fact b { font-variant-numeric: tabular-nums; }
+  section { display: grid; gap: 22px; }
+  .sec-head { display: grid; gap: 8px; }
+  .sec-head p { color: var(--muted); }
+
+  /* bug list */
+  .bugs { display: grid; gap: 12px; }
+  .bug { background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--red); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; }
+  .bug.warn { border-left-color: var(--amber); }
+  .bug .top { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 6px; padding: 2px 8px; }
+  .tag.red { background: var(--red-soft); color: var(--red); }
+  .tag.amber { background: var(--amber-soft); color: var(--amber-ink); }
+  .tag.green { background: var(--green-soft); color: var(--green); }
+  .tag.blue { background: var(--blue-soft); color: var(--blue); }
+  .bug p { color: var(--muted); font-size: 15px; }
+  .bug .where { font-size: 13px; color: var(--muted); }
+
+  /* improvement rows */
+  .items { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .item { display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; padding: 16px 20px; border-top: 1px solid var(--line); align-items: start; }
+  .item:first-child { border-top: 0; }
+  .item .id { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 14px; color: var(--amber-ink); padding-top: 2px; }
+  .item h3 { font-size: 17px; margin-bottom: 4px; }
+  .item p { font-size: 15px; color: var(--muted); }
+  .item .gain { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  @media (max-width: 640px) {
+    .item { grid-template-columns: 40px 1fr; }
+    .item .gain { grid-column: 2; flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+  }
+
+  /* screenshots */
+  .gallery { display: grid; gap: 20px; }
+  .phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+  .desk { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); gap: 18px; }
+  figure { margin: 0; display: grid; gap: 10px; align-content: start; }
+  figure .frame { background: var(--shot); border-radius: 18px; padding: 6px; box-shadow: 0 10px 30px rgba(15,23,42,.12); }
+  .desk figure .frame { border-radius: 12px; padding: 4px; }
+  figure img { display: block; width: 100%; height: auto; border-radius: 13px; }
+  .desk figure img { border-radius: 9px; }
+  figcaption { font-size: 14px; color: var(--muted); line-height: 1.45; }
+  figcaption b { color: var(--ink); display: block; font-weight: 600; margin-bottom: 2px; }
+  .label { display: inline-block; margin-right: 6px; }
+
+  /* guardrails */
+  .rails { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+  .rail { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+  .rail h3 { font-size: 16px; }
+  .rail p { font-size: 15px; color: var(--muted); }
+
+  /* rollout */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: s; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; }
+  .steps li::before { content: counter(s); width: 30px; height: 30px; border-radius: 50%; background: var(--amber); color: #0f172a; font-weight: 600; display: grid; place-items: center; font-size: 14px; }
+  .steps b { display: block; }
+  .steps span { color: var(--muted); font-size: 15px; }
+  .note { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; max-width: 80ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">WorkHive · SJC Fuel Services · proposal, 24 Sep 2026</div>
+    <h1>Faster, safer staff app and manager dashboard</h1>
+    <p class="lede">A review of <code>app.html</code> (staff) and <code>dashboard.html</code> (managers and owner), with a list of JavaScript changes and screenshots of how each one looks. Everything is added on top of the current app. No tables, permissions or pay data change, and every change is designed to make pages faster, not slower.</p>
+    <div class="facts">
+      <span class="fact"><b>5</b> bugs to fix first, 3 of them lose clock-in data</span>
+      <span class="fact"><b>8</b> staff app upgrades</span>
+      <span class="fact"><b>9</b> dashboard upgrades</span>
+      <span class="fact">dashboard: <b>1.78 MB</b> single file, <b>100</b> pop-up dialogs, <b>11</b> polling timers</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Fix first</div>
+      <h2>Bugs found during the review</h2>
+      <p>These are in the live code today. The first three can lose clock-in or clock-out times, so hours go missing from payroll. Each fix is small and self-contained.</p>
+    </div>
+    <div class="bugs">
+      <div class="bug">
+        <div class="top"><span class="tag red">Data loss</span><h3>Clocking in and out with no signal loses the clock-out</h3></div>
+        <p>An offline clock-in is saved on the phone without a record id. When that person then clocks out, still offline, the saved clock-out points at "no id". When the phone comes back online, the update matches nothing and is thrown away. The shift stays open until the auto-close runs.</p>
+        <div class="where mono">app.html:2601, 2774, 843 · fix: match the queued clock-out on the clock-in's idempotency_key</div>
+      </div>
+      <div class="bug">
+        <div class="top"><span class="tag red">Data loss</span><h3>A tap on weak signal is dropped, not saved for later</h3></div>
+        <p>The app only queues a clock event when the phone reports it is fully offline. On one bar of signal the phone still says "online", the request fails, and the only thing left is an error message. The tap is gone.</p>
+        <div class="where mono">app.html:2768, 2779 · fix: if the request fails with a network error, add it to the offline queue</div>
+      </div>
+      <div class="bug">
+        <div class="top"><span class="tag red">Data loss</span><h3>Saved clock events only sync when the connection changes</h3></div>
+        <p>The queue is sent only when the phone switches from offline to online. If the app is closed while offline, saved events can sit on the phone for days. After a reload the app shows "Not clocked in" even though a clock-in is waiting, which invites a second clock-in.</p>
+        <div class="where mono">app.html:854, 2127 · fix: send the queue on app open and when the app comes back to the front, and show a "waiting to sync" chip</div>
+      </div>
+      <div class="bug warn">
+        <div class="top"><span class="tag amber">Wrong number</span><h3>"Pending approvals" and "Open shifts" always show 0</h3></div>
+        <p>These Overview tiles ask the database for a count, then read the (empty) list instead of the count. The Approvals badge in the sidebar is also always hidden, so managers never see the nudge.</p>
+        <div class="where mono">dashboard.html:9665, 9677 · fix: read <code>count</code> instead of <code>data.length</code></div>
+      </div>
+      <div class="bug warn">
+        <div class="top"><span class="tag amber">Broken button</span><h3>The Library tile in the staff app never loads</h3></div>
+        <p>The tile calls a function that doesn't exist, so it spins forever. The real function has a different name.</p>
+        <div class="where mono">app.html:1147 · fix: <code>loadResources</code> → <code>loadStaffResources</code></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Staff app · app.html</div>
+      <h2>What changes for staff</h2>
+      <p>Staff open the app mainly to clock in. Today the clock button is below the fold on a busy day, and a profile reminder can cover it. The plan puts the clock and the shift in charge of the home screen.</p>
+    </div>
+    <div class="items">
+      <div class="item"><div class="id">S1</div><div><h3>Shift-aware clock card at the top</h3><p>Shows "Your shift started 1h 18m ago" in red when someone is late, or "Starts in 2h 15m". Once clocked in: a live hours:minutes:seconds timer, a progress bar, break due and finish time. Built from shift data the app already loads, so no extra database calls.</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">S2</div><div><h3>Visible sync status for clock events</h3><p>A chip under the button: "All clock events synced", or "1 clock-in saved on this phone, syncs automatically". Staff and managers can see that nothing is lost. Goes with bug fixes 1 to 3.</p></div><div class="gain"><span class="tag red">Data safety</span></div></div>
+      <div class="item"><div class="id">S3</div><div><h3>Location check as an in-app sheet</h3><p>Replaces the browser's "OK / Cancel" pop-up in the middle of clocking in. Shows how far away the phone is, lets the person tap a reason, and offers "Try location again".</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">S4</div><div><h3>Tabs open instantly, then refresh</h3><p>Each tab keeps its last result in memory and shows it straight away while fresh data loads in the background. Pull down to refresh. The Today tab refreshes itself when the app comes back to the front. Fewer spinners and fewer repeat database calls.</p></div><div class="gain"><span class="tag blue">Speed</span></div></div>
+      <div class="item"><div class="id">S5</div><div><h3>Links and the back button work</h3><p>Push notifications already send staff to <code>/app#rota</code>, but the app ignores the <code>#rota</code> part. Reading it opens the right tab, and the phone's back button moves between tabs.</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">S6</div><div><h3>Clear confirmation on clock in and out</h3><p>A short vibration and a "Clocked in 14:03" toast. After an error the button is reset instead of stuck on "Getting location…".</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">S7</div><div><h3>Forms keep what was typed</h3><p>Holiday requests and pay queries save a draft if the sheet is closed by accident. The submit button is disabled while sending, so a double tap can't create two requests.</p></div><div class="gain"><span class="tag red">Data safety</span></div></div>
+      <div class="item"><div class="id">S8</div><div><h3>Banners stop covering the controls</h3><p>The profile reminder moves to the Profile tab. The offline banner sits in the page instead of floating over the messages bar.</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+    </div>
+
+    <div class="gallery">
+      <div class="phones">
+        <figure><div class="frame"><img src="img/staff-before.png" alt="Current staff home screen: GO+ card first, clock button hidden under a profile banner" loading="lazy"></div><figcaption><b><span class="tag amber label">Now</span>Today screen</b>14:00 shift, 15:16 now. Nothing says the person is late, and the Clock in button is under the profile banner.</figcaption></figure>
+        <figure><div class="frame"><img src="img/staff-after-hero.png" alt="New home screen with shift-aware clock card showing shift started 1h 18m ago" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>S1 · S2 · S8</b>Clock card first, with the late warning, shift details, sync status and last-updated time.</figcaption></figure>
+        <figure><div class="frame"><img src="img/staff-after-offline.png" alt="Clocked-in state with live timer, progress bar and one clock-in waiting to sync" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>Clocked in, no signal</b>Live timer, shift progress and break time. The chip shows one clock-in saved on the phone.</figcaption></figure>
+        <figure><div class="frame"><img src="img/staff-after-geofence.png" alt="Bottom sheet explaining the person is 420 m from the site with reason chips" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>S3 · Location sheet</b>Replaces the browser pop-up. Shows the distance, offers quick reasons and a retry.</figcaption></figure>
+        <figure><div class="frame"><img src="img/staff-after-rota.png" alt="Rota tab shown instantly from saved copy while refreshing" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>S4 · Instant tabs</b>The rota appears at once from the phone's copy while the live data refreshes.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Managers and owner · dashboard.html</div>
+      <h2>What changes on the dashboard</h2>
+      <p>The dashboard is one 27,000-line file that runs every panel's code on every visit, with 459 database queries mostly run one after another. These changes make the daily jobs quicker without rewriting any panel.</p>
+    </div>
+    <div class="items">
+      <div class="item"><div class="id">D1</div><div><h3>Correct counts and a "needs attention" row</h3><p>Fixes the 0 counts. Adds one row of actionable items above the tiles (approvals, cash not banked, flagged end-of-day checks, open shifts). Each one opens the right panel.</p></div><div class="gain"><span class="tag amber">Bug fix</span><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">D2</div><div><h3>Every panel has its own link</h3><p><code>/dashboard#cash</code> opens Cash Banking. Refreshing keeps you on the same panel, and panels can be bookmarked. It goes through the existing <code>switchPanel</code>, so owner-only and HR-only checks still apply.</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">D3</div><div><h3>Ctrl+K search that covers everything</h3><p>The current search lists 17 panels and misses every forecourt panel (sales, cash, recon, checks, GO+, stock, RPI, wastage, visits, bank). The new version adds them plus actions and people, and only shows panels the user can open.</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">D4</div><div><h3>Filter, sort and export on any table</h3><p>One small helper adds a filter box, sortable column headers and CSV export to tables. Today only payroll sorts, and only five panels export.</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">D5</div><div><h3>In-app dialogs with Undo</h3><p>Replaces 16 <code>alert</code>, 72 <code>confirm</code> and 12 <code>prompt</code> pop-ups. Rejections get reason chips, and approvals get a 10-second Undo instead of an "Are you sure?" step.</p></div><div class="gain"><span class="tag green">UX</span></div></div>
+      <div class="item"><div class="id">D6</div><div><h3>Background checks pause when the tab is hidden</h3><p>Eleven timers poll the database, most every 60 seconds, even in a background tab. Pausing them while the tab is hidden and running them together on one timer cuts requests. A "Live · updated 12s ago" pill shows how fresh the data is.</p></div><div class="gain"><span class="tag blue">Speed</span></div></div>
+      <div class="item"><div class="id">D7</div><div><h3>Load the map library only when a map opens</h3><p>Leaflet loads before the page can start (line 2589), but only Site Visits uses it. Loading it on demand gives a quicker first screen.</p></div><div class="gain"><span class="tag blue">Speed</span></div></div>
+      <div class="item"><div class="id">D8</div><div><h3>Run Overview queries in parallel</h3><p>Live attendance, late today and open shifts wait for each other one by one. Running them together with <code>Promise.all</code> makes the Overview appear sooner, with the same queries and results.</p></div><div class="gain"><span class="tag blue">Speed</span></div></div>
+      <div class="item"><div class="id">D9</div><div><h3>Warn before leaving unsaved changes</h3><p>Switching panels or closing the tab mid-edit loses the input without warning. Only Site Visits saves a draft today. Add a warning to all panel forms.</p></div><div class="gain"><span class="tag red">Data safety</span></div></div>
+    </div>
+
+    <div class="gallery">
+      <div class="desk">
+        <figure><div class="frame"><img src="img/dash-before.png" alt="Current overview with Pending approvals 0 and Open shifts 0" loading="lazy"></div><figcaption><b><span class="tag amber label">Now</span>Overview</b>The test data has 9 items waiting for approval and 3 open shifts, but both tiles read 0 and the sidebar badge is missing.</figcaption></figure>
+        <figure><div class="frame"><img src="img/dash-after-overview.png" alt="Fixed overview showing 9 pending approvals, 3 open shifts and a needs-attention row" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>D1 · D6</b>Correct counts, an Approvals badge showing 9, a needs-attention row and the live-data pill.</figcaption></figure>
+        <figure><div class="frame"><img src="img/dash-after-palette.png" alt="Command palette searching cash showing panels, actions and people" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>D3 · Ctrl+K search</b>Typing "cash" finds forecourt panels, actions such as exporting a month, and people.</figcaption></figure>
+        <figure><div class="frame"><img src="img/dash-after-table.png" alt="Who's in table with filter box, quick filters, sortable headers and export" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>D4 · Table tools</b>Filter box, quick filters, sortable columns and CSV export on the Who's in table.</figcaption></figure>
+        <figure><div class="frame"><img src="img/dash-after-confirm.png" alt="In-app reject timesheet dialog with reason chips and an undo toast" loading="lazy"></div><figcaption><b><span class="tag green label">After</span>D5 · In-app dialogs</b>Rejecting a timesheet with a reason instead of a browser prompt. An approval shows an Undo toast.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Guardrails</div>
+      <h2>How we build it without losing data or speed</h2>
+    </div>
+    <div class="rails">
+      <div class="rail"><h3>Added on top, not rewritten</h3><p>New code lives in small separate files loaded after the page (<code>defer</code>). Existing functions keep working. The only edits to current code are the five bug fixes, each a few lines.</p></div>
+      <div class="rail"><h3>No database or permission changes</h3><p>No new tables, columns or security rules. Every save still goes through the same Supabase calls, so security rules and audit logs are unchanged.</p></div>
+      <div class="rail"><h3>Saved copies are for display only</h3><p>Instant tabs show the last copy, then always reload. Clock state, pay and approvals are never decided from a saved copy.</p></div>
+      <div class="rail"><h3>Size and speed budget</h3><p>All new code together stays under 15 KB compressed. Page load time and number of requests are measured before and after each release, and must not get worse.</p></div>
+      <div class="rail"><h3>Tested before deploy</h3><p>New unit tests for the offline queue and the count fix sit next to the existing ones in <code>test/</code>. Everything runs through <code>npm test</code> and the pre-deploy check.</p></div>
+      <div class="rail"><h3>Switch off per feature</h3><p>Each upgrade has an on/off flag, so any one can be turned off without a redeploy if something looks wrong.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div class="eyebrow">Order of work</div>
+      <h2>Suggested rollout</h2>
+    </div>
+    <ol class="steps">
+      <li><div><b>Bug fixes 1 to 5</b><span>Offline queue, weak-signal taps, sync on open, Overview counts, Library tile. Smallest changes, biggest risk removed.</span></div></li>
+      <li><div><b>Staff clock card and sync chip (S1, S2, S6, S8)</b><span>Trial at one site first (Winnall), then all four stations.</span></div></li>
+      <li><div><b>Dashboard speed (D6, D7, D8) and links (D2)</b><span>Quick wins that don't change what managers see.</span></div></li>
+      <li><div><b>Ctrl+K search, needs-attention row, table tools (D1, D3, D4)</b><span>Visible upgrades for managers and the owner.</span></div></li>
+      <li><div><b>Dialogs, drafts and unsaved-change warnings (S3, S7, D5, D9)</b><span>Done panel by panel. There are 100 pop-ups to replace, so this runs over several releases.</span></div></li>
+      <li><div><b>Instant tabs and pull-to-refresh (S4, S5)</b><span>Last, once the rest is stable.</span></div></li>
+    </ol>
+  </section>
+
+  <p class="note">How the screenshots were made: the real <code>app.html</code> and <code>dashboard.html</code> from the workhive repo, run in a browser with made-up test staff and shifts instead of the live database. No production data was used. The "After" screens come from a working prototype script loaded on top of those real pages. Some example items (for example "Chandlers Ford not banked yesterday") are illustrative wording for the needs-attention row.</p>
+</div>
