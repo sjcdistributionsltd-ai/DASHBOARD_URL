@@ -23,7 +23,7 @@
       if (r === 'bday') state.staff.date_of_birth = '1998' + today.slice(4);
       else { state.staff.date_of_birth = '1998-02-11'; state.staff.start_date = '2025' + today.slice(4); }
       whCheckBirthday(state.staff, state.org, { site: state.site?.name, hold: !!q.get('hold'),
-        note: r === 'bday' ? 'Happy birthday Jordan! There\'s cake in the staff room, enjoy your day 🎂' : null, from: r === 'bday' ? 'Sarah and the Winnall team' : null });
+        note: r === 'bday' ? 'Happy birthday Jordan! Hope you have a brilliant day 🎂' : null, from: r === 'bday' ? 'Sarah and the Winnall team' : null });
       if (q.get('auto')) {
         // Simulated taps for the recording: pop balloons that are on screen, the golden one at ~5.5s.
         let t = 0; const iv = setInterval(() => { t += 420;
