@@ -14,10 +14,19 @@ B=https://raw.githubusercontent.com/sjcdistributionsltd-ai/DASHBOARD_URL/claude/
 curl -fsSL "$B/low-bridge.gif" -o assets/DBH3-low-bridge.gif
 curl -fsSL "$B/droplet/wa_safety_post.py" -o wa_safety_post.py
 curl -fsSL "$B/droplet/run_wa_safety.sh" -o run_wa_safety.sh && chmod +x run_wa_safety.sh
-./run_wa_safety.sh --self-test --force && tail -20 logs/wa-safety.log
+./run_wa_safety.sh --open-only; tail -3 logs/wa-safety.log
 ```
 
-The old scripts are kept in `/root/shell-pdi/backup/`.
+`--open-only` opens the real group and sends nothing; it should end `-> OK`. (The `--self-test` route needs a "Message yourself" chat on the linked account, which this one does not have.) The old scripts are kept in `/root/shell-pdi/backup/`.
+
+The cron line was commented out on 3 Oct 2026. To switch the daily post back on, once a day at 12:00 UK all year:
+
+```bash
+crontab -l | sed 's|^# STOPPED 3 Oct 2026.*run_wa_safety.sh$|0 11,12 * * * /root/shell-pdi/run_wa_safety.sh|' | crontab -
+crontab -l | grep run_wa_safety
+```
+
+It runs at 11:00 and 12:00 UTC, and the UK-hour guard lets exactly one of them post (11:00 UTC in summer, 12:00 UTC in winter).
 
 ## Deploy (from a machine with the droplet key)
 

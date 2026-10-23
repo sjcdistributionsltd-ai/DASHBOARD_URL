@@ -16,7 +16,7 @@ index 97e934a..9b29bab 100644
  echo "=== $(date -Is) wa safety post ===" >> logs/wa-safety.log
  /opt/amazon-desktop/report_job/venv/bin/python wa_safety_post.py "$@" >> logs/wa-safety.log 2>&1
 diff --git a/scripts/droplet-cron/wa_safety_post.py b/scripts/droplet-cron/wa_safety_post.py
-index bf1437f..4307710 100644
+index bf1437f..3023588 100644
 --- a/scripts/droplet-cron/wa_safety_post.py
 +++ b/scripts/droplet-cron/wa_safety_post.py
 @@ -9,8 +9,11 @@ paste event carrying the PNG (identical to a human pasting a screenshot),
@@ -33,7 +33,7 @@ index bf1437f..4307710 100644
  guard = always 12:00 UK. Heartbeat: wa-safety-post. Self-verifies via the DOM
  after sending; the shadow feed mirrors it within a minute as a second witness.
  
-@@ -25,8 +28,10 @@ from cdp_mini import Tab, container_ip
+@@ -25,14 +28,20 @@ from cdp_mini import Tab, container_ip
  SB_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
  SB_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
  GROUP = "DBH3 Driver Chat on the road Issues"
@@ -46,7 +46,18 @@ index bf1437f..4307710 100644
  CAPTION_FILE = "/root/shell-pdi/assets/wa_safety_caption.txt"
  
  def log(m): print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] {m}", flush=True)
-@@ -350,7 +355,7 @@ def main():
+ 
+ def uk_hour():
+-    return int((datetime.datetime.utcnow() + datetime.timedelta(hours=1)).strftime("%H"))
++    # Real UK time, not UTC+1. The fixed +1 was only right in summer: from the
++    # last Sunday in October it reads 11:00 UTC as 12, so the post went out at
++    # 11:00 UK all winter, and it read the 12:00 UTC run as 13 and skipped it.
++    from zoneinfo import ZoneInfo
++    return datetime.datetime.now(ZoneInfo("Europe/London")).hour
+ 
+ def heartbeat(name, summary):
+     if not SB_URL: return
+@@ -350,7 +359,7 @@ def main():
          # only: we never fall back after clicking send (double-post risk).
          last = t.eval("""(() => {
            const rows = [...document.querySelectorAll('#main [data-id]')].slice(-3);

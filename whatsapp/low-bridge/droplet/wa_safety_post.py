@@ -37,7 +37,11 @@ CAPTION_FILE = "/root/shell-pdi/assets/wa_safety_caption.txt"
 def log(m): print(f"[{datetime.datetime.now():%Y-%m-%d %H:%M:%S}] {m}", flush=True)
 
 def uk_hour():
-    return int((datetime.datetime.utcnow() + datetime.timedelta(hours=1)).strftime("%H"))
+    # Real UK time, not UTC+1. The fixed +1 was only right in summer: from the
+    # last Sunday in October it reads 11:00 UTC as 12, so the post went out at
+    # 11:00 UK all winter, and it read the 12:00 UTC run as 13 and skipped it.
+    from zoneinfo import ZoneInfo
+    return datetime.datetime.now(ZoneInfo("Europe/London")).hour
 
 def heartbeat(name, summary):
     if not SB_URL: return
