@@ -4,6 +4,21 @@ The PDI droplet already posts a safety message to "DBH3 Driver Chat on the road 
 
 `workhive-wa-safety-gif.patch` is the same change as a patch for the workhive repo (`git apply` from the workhive root), so the repo copy matches the droplet.
 
+## Deploy without the SSH key (DigitalOcean web console)
+
+This repository is public, so the droplet can download the files itself. In DigitalOcean, open the droplet and choose **Access → Launch Droplet Console**, then paste:
+
+```bash
+cd /root/shell-pdi && mkdir -p assets backup && cp -n wa_safety_post.py run_wa_safety.sh backup/ 2>/dev/null
+B=https://raw.githubusercontent.com/sjcdistributionsltd-ai/DASHBOARD_URL/claude/kava-van-bridge-animation-wd3470/whatsapp/low-bridge
+curl -fsSL "$B/low-bridge.gif" -o assets/DBH3-low-bridge.gif
+curl -fsSL "$B/droplet/wa_safety_post.py" -o wa_safety_post.py
+curl -fsSL "$B/droplet/run_wa_safety.sh" -o run_wa_safety.sh && chmod +x run_wa_safety.sh
+./run_wa_safety.sh --self-test --force && tail -20 logs/wa-safety.log
+```
+
+The old scripts are kept in `/root/shell-pdi/backup/`.
+
 ## Deploy (from a machine with the droplet key)
 
 ```bash
