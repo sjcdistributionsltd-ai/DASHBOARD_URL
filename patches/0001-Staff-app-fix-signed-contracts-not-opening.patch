@@ -1,0 +1,36 @@
+From 3d0e8784469a7497376ea468ca8a4d21b07aee36 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 1 Nov 2026 08:49:45 +0000
+Subject: [PATCH] Staff app: fix signed contracts not opening
+
+Opening a signed contract called fmtDateTime(), which app.html never
+defined. The ReferenceError stopped the contract modal from rendering,
+so staff tapping "View" on a signed contract saw nothing happen.
+Unsigned contracts were unaffected because that branch never calls it.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01ME6hqPpXCEG5aPWYs1v4wF
+---
+ public/app.html | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/public/app.html b/public/app.html
+index 67a0b64..bfd3678 100644
+--- a/public/app.html
++++ b/public/app.html
+@@ -833,6 +833,12 @@
+       if (!iso) return '—';
+       return new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+     }
++    // Used by the signed-contract view. It was missing, so opening a signed
++    // contract threw a ReferenceError and the modal never appeared.
++    function fmtDateTime(iso) {
++      if (!iso) return '—';
++      return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
++    }
+     function fmtMoney(n) {
+       if (n == null) return '—';
+       return '£' + Number(n).toFixed(2);
+-- 
+2.43.0
+
