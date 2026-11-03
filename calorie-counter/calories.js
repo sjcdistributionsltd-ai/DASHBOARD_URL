@@ -180,6 +180,41 @@
   const MEALS = [['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['dinner', 'Dinner'], ['snack', 'Snacks']];
   const DEFAULT_TARGET = 2000;
 
+  // ── what you need: Mifflin-St Jeor resting burn × activity, then the goal ──
+  const ACTIVITY = [
+    ['sedentary', 'Mostly sitting (desk job, little exercise)', 1.2],
+    ['light', 'Lightly active (on feet some of the day, or exercise 1–3 days a week)', 1.375],
+    ['moderate', 'Active (on feet most of the day, or exercise 3–5 days a week)', 1.55],
+    ['very', 'Very active (physical job, or hard exercise 6–7 days a week)', 1.725],
+    ['extra', 'Extremely active (heavy manual work plus training)', 1.9]
+  ];
+  // kcal a day vs maintenance. 7,700 kcal ≈ 1 kg of body fat, so 550/day ≈ 0.5 kg a week.
+  const GOALS = [
+    ['lose1', 'Lose about 1 kg (2 lb) a week', -1100],
+    ['lose05', 'Lose about 0.5 kg (1 lb) a week', -550],
+    ['lose025', 'Lose about 0.25 kg (½ lb) a week', -275],
+    ['maintain', 'Stay the same weight', 0],
+    ['gain025', 'Gain about 0.25 kg (½ lb) a week', 275],
+    ['gain05', 'Gain about 0.5 kg (1 lb) a week', 550]
+  ];
+  const FLOOR = { male: 1500, female: 1200 };   // common safe minimum without medical supervision
+
+  // {sex, age, heightCm, weightKg, activity, goal} → {bmr, maintenance, target, floored} or null.
+  function needs(p) {
+    if (!p) return null;
+    const age = Number(p.age), h = Number(p.heightCm), w = Number(p.weightKg);
+    if (!(age >= 14 && age <= 100 && h >= 120 && h <= 230 && w >= 30 && w <= 300)) return null;
+    if (p.sex !== 'male' && p.sex !== 'female') return null;
+    const act = ACTIVITY.find(a => a[0] === p.activity), goal = GOALS.find(g => g[0] === p.goal);
+    if (!act || !goal) return null;
+    const bmr = 10 * w + 6.25 * h - 5 * age + (p.sex === 'male' ? 5 : -161);
+    const maintenance = bmr * act[2];
+    const raw = maintenance + goal[2];
+    const floor = FLOOR[p.sex];
+    const r50 = (n) => Math.round(n / 50) * 50;
+    return { bmr: Math.round(bmr), maintenance: r50(maintenance), target: r50(Math.max(raw, floor)), floored: raw < floor };
+  }
+
   const DAY = 86400000;
   const iso = (d) => new Date(d).toISOString().slice(0, 10);
   const addDays = (isoDay, n) => iso(new Date(isoDay + 'T12:00:00Z').getTime() + n * DAY);
@@ -240,6 +275,8 @@
       async init() {},
       async target() { return lsRead().target || DEFAULT_TARGET; },
       async setTarget(kcal) { const v = lsRead(); v.target = kcal; lsWrite(v); },
+      profile() { return lsRead().profile || null; },
+      setProfile(p) { const v = lsRead(); v.profile = p; lsWrite(v); },
       async range(from, to) { return lsRead().entries.filter(e => e.day >= from && e.day <= to); },
       async add(e) { const v = lsRead(); const row = { ...e, id: 'l' + Date.now() + Math.random().toString(36).slice(2, 6), created_at: new Date().toISOString() }; v.entries.push(row); lsWrite(v); return row; },
       async remove(id) { const v = lsRead(); v.entries = v.entries.filter(e => e.id !== id); lsWrite(v); }
@@ -296,6 +333,33 @@
         </div>
       </div>
 
+      <details data-cal="calc" style="margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-sm)">
+        <summary style="padding:12px 16px;cursor:pointer;font-weight:800">🎯 Work out my calories <span data-cal="calc-sum" style="font-weight:400;font-size:13px;color:var(--muted)"></span></summary>
+        <div style="padding:0 16px 16px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+            <label style="font-size:12px;color:var(--muted)">Sex<select data-cal="p-sex" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"><option value="female">Female</option><option value="male">Male</option></select></label>
+            <label style="font-size:12px;color:var(--muted)">Age<input type="number" min="14" max="100" data-cal="p-age" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"></label>
+            <label style="font-size:12px;color:var(--muted)">Units<select data-cal="p-units" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"><option value="imperial">Stone &amp; feet</option><option value="metric">kg &amp; cm</option></select></label>
+          </div>
+          <div data-cal="p-imperial" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:8px">
+            <label style="font-size:12px;color:var(--muted)">Height ft<input type="number" min="4" max="7" data-cal="p-ft" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"></label>
+            <label style="font-size:12px;color:var(--muted)">in<input type="number" min="0" max="11.9" step="0.5" data-cal="p-in" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"></label>
+            <label style="font-size:12px;color:var(--muted)">Weight st<input type="number" min="4" max="45" data-cal="p-st" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"></label>
+            <label style="font-size:12px;color:var(--muted)">lb<input type="number" min="0" max="13.9" step="0.5" data-cal="p-lb" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"></label>
+          </div>
+          <div data-cal="p-metric" style="display:none;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:8px">
+            <label style="font-size:12px;color:var(--muted)">Height cm<input type="number" min="120" max="230" data-cal="p-cm" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"></label>
+            <label style="font-size:12px;color:var(--muted)">Weight kg<input type="number" min="30" max="300" step="0.1" data-cal="p-kg" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px"></label>
+          </div>
+          <label style="display:block;font-size:12px;color:var(--muted);margin-top:8px">How active are you?<select data-cal="p-activity" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px">${ACTIVITY.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
+          <label style="display:block;font-size:12px;color:var(--muted);margin-top:8px">Your goal<select data-cal="p-goal" style="${inputCss}width:100%;box-sizing:border-box;margin-top:3px">${GOALS.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select></label>
+          <div data-cal="p-result" style="margin-top:12px;padding:12px;border-radius:10px;background:var(--card-2);border:1px solid var(--border);font-size:14px;color:var(--muted)">Fill in the boxes above to see what you need.</div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+            <button data-cal="p-use" style="${btnCss}background:var(--accent);color:#fff;border-color:var(--accent)" disabled>Use as my daily target</button>
+            <span style="font-size:12px;color:var(--muted)">An estimate from a standard formula (Mifflin-St Jeor), not medical advice. If you are pregnant, under 18 or have a health condition, ask your GP.</span>
+          </div>
+        </div>
+      </details>
       <div data-cal="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0 8px;"></div>
       <div data-cal="bar" style="height:12px;border-radius:999px;background:var(--card-2);border:1px solid var(--border);overflow:hidden;margin-bottom:16px"><div style="height:100%;width:0;transition:width .3s"></div></div>
 
@@ -350,6 +414,44 @@
     $('next').onclick = () => go(addDays(st.day, 1));
     $('today').onclick = () => go(localToday());
     $('date').onchange = (e) => { if (e.target.value) go(e.target.value); };
+    // ── calculator ──
+    const num = (k) => { const v = $(k).value; return v === '' ? NaN : Number(v); };
+    const readProfile = () => {
+      const metric = $('p-units').value === 'metric';
+      const heightCm = metric ? num('p-cm') : ((num('p-ft') || 0) * 12 + (num('p-in') || 0)) * 2.54;
+      const weightKg = metric ? num('p-kg') : ((num('p-st') || 0) * 14 + (num('p-lb') || 0)) * 0.45359237;
+      return { sex: $('p-sex').value, age: num('p-age'), units: metric ? 'metric' : 'imperial', heightCm: Math.round(heightCm * 10) / 10, weightKg: Math.round(weightKg * 10) / 10, activity: $('p-activity').value, goal: $('p-goal').value };
+    };
+    const showUnits = () => { const m = $('p-units').value === 'metric'; $('p-metric').style.display = m ? 'grid' : 'none'; $('p-imperial').style.display = m ? 'none' : 'grid'; };
+    const calc = () => {
+      const p = readProfile(), n = needs(p);
+      try { st.store.setProfile(p); } catch (_) {}
+      $('p-use').disabled = !n;
+      if (!n) { $('p-result').innerHTML = 'Fill in the boxes above to see what you need.'; $('calc-sum').textContent = ''; return; }
+      const g = GOALS.find(x => x[0] === p.goal);
+      $('p-result').innerHTML = `<div style="display:flex;gap:18px;flex-wrap:wrap;color:var(--text)">
+          <div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700">Resting burn</div><div style="font-size:20px;font-weight:800">${fmt(n.bmr)}</div></div>
+          <div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700">To stay the same</div><div style="font-size:20px;font-weight:800">${fmt(n.maintenance)}</div></div>
+          <div><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700">For your goal</div><div style="font-size:26px;font-weight:800;color:var(--accent)">${fmt(n.target)} kcal</div></div></div>
+        <div style="margin-top:6px;font-size:12.5px">${esc(g[1])}.${n.floored ? ` Raised to ${fmt(n.target)}, the usual safe minimum: going lower should only be done with a doctor.` : ''}</div>`;
+      $('calc-sum').textContent = `· you need about ${fmt(n.target)} kcal a day`;
+    };
+    const prof = st.store.profile();
+    if (prof) {
+      $('p-sex').value = prof.sex || 'female'; $('p-age').value = prof.age || ''; $('p-units').value = prof.units || 'imperial';
+      $('p-activity').value = prof.activity || 'light'; $('p-goal').value = prof.goal || 'maintain';
+      if (prof.heightCm) { $('p-cm').value = prof.heightCm; const ti = prof.heightCm / 2.54; $('p-ft').value = Math.floor(ti / 12); $('p-in').value = Math.round((ti % 12) * 2) / 2; }
+      if (prof.weightKg) { $('p-kg').value = prof.weightKg; const tl = prof.weightKg / 0.45359237; $('p-st').value = Math.floor(tl / 14); $('p-lb').value = Math.round((tl % 14) * 2) / 2; }
+    } else { $('p-activity').value = 'light'; $('p-goal').value = 'maintain'; $('calc').open = true; }
+    showUnits(); calc();
+    $('p-units').onchange = () => { showUnits(); calc(); };
+    ['p-sex', 'p-age', 'p-ft', 'p-in', 'p-st', 'p-lb', 'p-cm', 'p-kg', 'p-activity', 'p-goal'].forEach(k => { $(k).oninput = calc; $(k).onchange = calc; });
+    $('p-use').onclick = async () => {
+      const n = needs(readProfile()); if (!n) return;
+      try { await st.store.setTarget(n.target); st.target = n.target; $('target').value = n.target; say(`Target set to ${fmt(n.target)} kcal`); render(); renderMonth(); $('calc').open = false; }
+      catch (e) { say('Could not save: ' + e.message, true); }
+    };
+
     $('save-target').onclick = async () => {
       const v = Math.round(Number($('target').value));
       if (!(v >= 500 && v <= 10000)) return say('Target must be 500 to 10,000 kcal', true);
@@ -512,7 +614,7 @@
     $('month').querySelectorAll('tr[data-day]').forEach(tr => tr.onclick = () => { st.day = tr.dataset.day; loadDay(); host.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   }
 
-  const api = { mount, backup, restore, search, dayTotal, status, monthRows, FOODS, MEALS, DEFAULT_TARGET };
+  const api = { mount, backup, restore, needs, ACTIVITY, GOALS, search, dayTotal, status, monthRows, FOODS, MEALS, DEFAULT_TARGET };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Calories = api;
 })(typeof window !== 'undefined' ? window : globalThis);
